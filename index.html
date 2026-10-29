@@ -1,0 +1,73 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>答える</title>
+<style>
+:root{--g:#06C755;--bd:#e3e5e8}*{box-sizing:border-box}
+body{margin:0;background:#f2f3f5;font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;color:#1d1d1f;font-size:14px}
+header{background:#fff;padding:12px 14px;font-weight:700;border-bottom:1px solid var(--bd)}
+main{padding:12px 12px 120px}.box{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}
+.t{font-weight:700;margin-bottom:6px}.s{color:#444;font-size:13px;line-height:1.6;white-space:pre-wrap}.s b{color:#111}
+details summary{font-weight:700;cursor:pointer}.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{border:1.5px solid var(--bd);background:#fff;border-radius:999px;padding:8px 12px;font-size:14px}
+.chip.on{background:var(--g);border-color:var(--g);color:#fff;font-weight:700}
+textarea{width:100%;border:1px solid var(--bd);border-radius:8px;padding:8px;font:inherit;font-size:14px;min-height:40px}
+.st{font-size:12.5px;color:#137333;margin-top:6px}.cnt{font-size:12px;color:#666;margin:0 2px 8px}
+footer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--bd);padding:10px 12px 18px}
+button.send{width:100%;border:0;border-radius:12px;padding:13px;font-size:16px;font-weight:700;background:var(--g);color:#fff}
+button.send:disabled{background:#b9c2bd}.msg{text-align:center;padding:30px 16px;color:#444}.ok{background:#e7f8ee;color:#137333;font-weight:700;text-align:center}
+.lk{display:block;text-align:center;border:1px solid var(--bd);border-radius:10px;padding:9px;color:#0a66c2;text-decoration:none;margin-top:8px}
+</style></head><body>
+<header id="hd">読み込み中…</header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button></footer>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<script>
+const LIFF_ID="2012262067-htwZvG1K";
+const API="https://script.google.com/macros/s/AKfycbyF0FALqdPvnhmYA2dwkvCKhSQ_b-k2Vyh1X7dkx-iiMXQ4FVmWPBvEPWQlQ3N6nOGrDQ/exec?a=liff";
+const $=id=>document.getElementById(id),esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let D=null,sel={},note={},qid="";
+function err(m){$("hd").textContent="答える";$("mn").innerHTML='<div class="msg">'+esc(m)+'</div>';$("ft").hidden=true}
+async function api(o){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(Object.assign({idToken:liff.getIDToken(),q:qid},o))});return r.json()}
+function rowsHtml(rs){return (rs||[]).map(r=>r[0]?'<b>【'+esc(String(r[0]).replace(/^ー/,""))+'】</b>\n'+esc(r[1]):esc(r[1])).join("\n")}
+function stateOf(q){const x=(D.state||[]).find(y=>y.q===q);return x&&x.a.length?x.a.map(a=>a.v+"（"+a.who+"）").join("／"):""}
+function draw(){
+ $("hd").textContent=D.head||"答える";
+ let h="";
+ const sm=(D.summary||[]).map(c=>(c.text?esc(c.text)+"\n":"")+rowsHtml(c.rows)).join("\n").trim();
+ if(sm)h+='<div class="box"><details open><summary>案件の概要</summary><div class="s" style="margin-top:6px">'+sm+'</div></details></div>';
+ const qs=D.qs.filter(q=>!q.when||(stateOf(q.when.q)||"").indexOf(q.when.v)===0||sel[D.qs.find(y=>y.q===q.when.q)?.k]===q.when.v);
+ h+='<div class="cnt">あなたへの問い '+qs.length+'問</div>';
+ qs.forEach(q=>{
+  const bg=((q.text?esc(q.text)+"\n":"")+rowsHtml(q.rows)).trim(),st=stateOf(q.q);
+  h+='<div class="box"><div class="t">'+esc(q.q)+'</div>'+(bg?'<div class="s">'+bg+'</div>':"")+'<div class="chips">'+q.btns.map(b=>'<button class="chip'+(sel[q.k]===b?" on":"")+'" data-k="'+q.k+'" data-v="'+esc(b)+'">'+esc(b)+'</button>').join("")+'</div>'
+   +'<textarea placeholder="ひとこと（任意）" data-n="'+q.k+'">'+esc(note[q.k]||"")+'</textarea>'+(st?'<div class="st">いまの答え：'+esc(st)+'</div>':"")+'</div>';
+ });
+ (D.summary||[]).filter(c=>c.link).slice(0,1).forEach(c=>{h+='<a class="lk" href="'+esc(c.link)+'" target="_blank">🔗 この案件の詳細・履歴</a>'});
+ $("mn").innerHTML=h;$("ft").hidden=false;
+ document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const k=b.dataset.k;sel[k]=sel[k]===b.dataset.v?undefined:b.dataset.v;draw()});
+ document.querySelectorAll("textarea").forEach(t=>t.oninput=()=>{note[t.dataset.n]=t.value;upd()});
+ upd();
+}
+function upd(){const n=Object.keys(sel).filter(k=>sel[k]||note[k]).length;$("sd").disabled=!n;$("sd").textContent=n?"送信（"+n+"問）":"選んでください"}
+$("sd").onclick=async()=>{
+ $("sd").disabled=true;$("sd").textContent="送っています…";
+ try{
+  const answers=Object.keys(Object.assign({},sel,note)).filter(k=>sel[k]||note[k]).map(k=>({k:+k,v:sel[k]||"その他",note:note[k]||""}));
+  const r=await api({op:"ans",answers});if(!r.ok)return err(r.err);
+  const ctx=liff.getContext()||{};
+  let text="";
+  if(r.doneText)text=r.doneText;
+  else if(ctx.type==="utou")text=(D.head?D.head+"\n":"")+answers.map(a=>{const q=D.qs.find(x=>x.k===a.k);return (q?q.q:"")+"："+a.v+(a.note?"（"+a.note+"）":"")}).join("\n");
+  let sent=false;if(text&&liff.isInClient()){try{await liff.sendMessages([{type:"text",text:text.slice(0,4900)}]);sent=true}catch(e){}}
+  D=r;$("ft").hidden=true;
+  $("mn").innerHTML='<div class="box ok">送信しました</div><div class="box"><div class="t">いまの状況</div><div class="s">'+r.state.map(x=>(x.a.length?"✅ ":"⬜ ")+esc(x.q)+(x.a.length?"："+esc(x.a.map(a=>a.v+"（"+a.who+"）").join("／")):"")).join("\n")+'</div></div>'
+   +'<div class="msg">'+(r.done?"全部そろいました。"+(sent?"トークにまとめを出しました":""):"ほかの人の答えを待っています（トークには何も出ていません）")+'</div>'
+   +(liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">閉じる</button>':"");
+ }catch(e){err("送れませんでした："+e.message)}
+};
+(async()=>{
+ try{
+  await liff.init({liffId:LIFF_ID,withLoginOnExternalBrowser:true});
+  qid=new URLSearchParams(location.search).get("q")||"";
+  if(!qid)return err("件の番号がありません（カードの［答える］から開いてください）");
+  const r=await api({op:"load"});if(!r.ok)return err(r.err);
+  D=r;if(!D.qs.length)return err("この件に、あなたへの問いはありません");draw();
+ }catch(e){err("開けませんでした："+e.message)}
+})();
+</script></body></html>
