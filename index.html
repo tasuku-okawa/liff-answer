@@ -24,6 +24,10 @@ button.send:disabled{background:#b9c2bd}.msg{text-align:center;padding:30px 16px
 .row .rm{font-size:12px;color:#555;margin-top:5px;line-height:1.55;white-space:pre-wrap}.row button{margin-top:8px;border:0;border-radius:10px;padding:8px 14px;background:var(--g);color:#fff;font-weight:700;font-size:13px}
 .lab{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;margin-right:6px;vertical-align:1px}
 .l-me{background:var(--g);color:#fff}.l-wait{background:#eef1f5;color:#555}.l-done{background:#f1f3f4;color:#999}
+.qb{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--bd);border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:6px;color:#1d1d1f}.qb.on{border-color:var(--g);background:#f3fcf6}
+.ans{background:#f3fcf6;border:1px solid #bfe9cf;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.65;margin:-2px 0 8px;white-space:pre-wrap}.ans.no{background:#fff8e1;border-color:#f1d98a}.ans .sm{display:block;color:#666;font-size:11.5px;margin-top:5px;white-space:normal}.ans a{color:#0a66c2}
+.tg{display:inline-block;font-size:11px;border-radius:6px;padding:1px 7px;margin-right:5px;background:#eef1f5;color:#555;font-weight:700}.tr{background:#fde8e7;color:#c5221f}.tgn{background:#e7f8ee;color:#137333}
+.bk{display:block;color:#0a66c2;font-size:13px;cursor:pointer;margin-bottom:8px}.lk+button.send,.send2+button.send{margin-top:14px}button.send2{display:block;width:100%;border:1.5px solid var(--g);border-radius:12px;padding:11px;font-size:14.5px;font-weight:700;background:#fff;color:#137333;margin-top:10px}
 </style></head><body>
 <header id="hd">読み込み中…</header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -136,39 +140,58 @@ function mList(){
  document.querySelectorAll(".row button[data-q]").forEach(b=>b.onclick=()=>{location.href=location.pathname+"?q="+encodeURIComponent(b.dataset.q)});
 }
 /* ---- 質問する（カードの中身から答える・ほかは大川さんへ） ---- */
-let aQ="",aFind="",aShow="",aBusy=false;
-function aFacts(x){const f=x.facts||{},out=[];const h=String(f.head||x.head||"");
- const due=(h.match(/^🚨([^｜|]*)/)||[])[1];if(due)out.push(["期限",due.trim()]);
- const fr=(h.match(/（([^（）]*)）\s*$/)||[])[1];if(fr){const p=fr.split(/\s*[／\/]\s*/);out.push(["誰から",p.length>1?"エンドは"+p[0]+"、窓口は"+p.slice(1).join("・")+"さんです":p[0]+"からの件です"])}
- (f.rows||[]).forEach(r=>{const l=String(r[0]||"").replace(/^ー/,"").trim();if(l&&r[1])out.push([l,String(r[1])])});
- if(f.text)out.push(["何の相談",String(f.text)]);
- return out}
+let aQ="",aFind="",aShow="",aBusy=false,aWrite=false,aPre="";
+const AQ=[["due","📅","いつまでに返事？","いつまでに返事が要りますか？"],["when","🗓","いつやる？","いつやりますか？"],["from","🏢","どこからの話？","どこからの話ですか？"],["what","🎬","何をするの？","何をするのですか？"],["money","💴","いくら？","金額はいくらですか？"],["now","📍","いまどこまで？","いまどこまで進んでいますか？"]];
+const AR={due:/期限|締切|返答/,when:/実施|時期|公開|大会|撮影|日程/,what:/中身|やること|ほしいもの|希望|内容/,money:/予算|金額|定額|売上|本体|費|円/};
+function aDue(x){const h=String((x.facts&&x.facts.head)||x.head||"");return((h.match(/^🚨([^｜|]*)/)||[])[1]||"").trim()}
+function aKey(x){const m=aDue(x).match(/(\d+)\/(\d+)/);return m?(+m[1]<7?+m[1]+12:+m[1])*100+ +m[2]:99999}
+function aFacts(x){const f=x.facts||{},h=String(f.head||x.head||""),A={},used={},more=[];
+ const rows=(f.rows||[]).map(r=>[String(r[0]||"").replace(/^ー/,"").trim(),String(r[1]||"")]).filter(r=>r[0]&&r[1]&&r[0].indexOf("@")<0);
+ const pick=k=>rows.filter((r,i)=>!used[i]&&AR[k].test(r[0])&&(used[i]=1)).map(r=>r[0]+"："+r[1]).join("\n");
+ const due=aDue(x);A.due=(due?due:"")+(pick("due")?(due?"\n":"")+pick("due"):"")||"";
+ ["when","what","money"].forEach(k=>A[k]=pick(k));
+ if(!A.what&&f.text)A.what=String(f.text);
+ const fr=(h.match(/（([^（）]*)）\s*$/)||[])[1];if(fr){const p=fr.split(/\s*[／\/]\s*/);A.from=p.length>1?"エンドは "+p[0]+"、窓口は "+p.slice(1).join("・")+" さん":p[0]}
+ const st=(x.state||[]).map(y=>(y.a&&y.a.length?"✅ "+y.q+"："+y.a.map(a=>a.v+"（"+a.who+"）").join("／"):"⬜ "+y.q+"（"+(y.to?({"江藤":"江藤さん","ウンパ":"村井さん","大川":"大川さん"}[y.to]||y.to):"みなさん")+"の答え待ち）")).join("\n");
+ A.now=((f.text?String(f.text)+"\n\n":"")+st).trim();
+ rows.forEach((r,i)=>{if(!used[i])more.push(r)});
+ return {A,more}}
+function aSent(r){$("mn").innerHTML='<div class="box ok">大川さんに送りました</div><div class="msg">'+(r.name?esc(r.name)+" の件として届きました。":"")+'返事はこのトークに来ます</div>'+mClose()}
 function mAsk(){
- const L=(M.list||[]).filter(x=>x.label!=="完了");$("hd").textContent="質問する";$("ft").hidden=true;
+ const L=(M.list||[]).filter(x=>x.label!=="完了").sort((a,b)=>aKey(a)-aKey(b));$("ft").hidden=true;
  const x=L.find(y=>y.qid===aQ);let h="";
- if(!x){
-  h+='<input id="af" placeholder="🔍 件を探す（例：h&s）" value="'+esc(aFind)+'" style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:9px;font-size:14px;margin-bottom:8px">';
+ const box=(title,sub)=>'<div class="box"><div class="t">'+title+'</div><div class="s" style="margin-bottom:7px">'+sub+'</div><textarea id="at" placeholder="例：撮影は何時からですか">'+esc(aPre)+'</textarea><button class="send" id="as" style="margin-top:8px">送る</button></div>';
+ if(aQ==="_none"){$("hd").textContent="大川さんに聞く";h+='<span id="aback" class="bk">← 戻る</span>'+box("大川さんに聞く","件に関係ないことでも大丈夫です。返事はこのトークに来ます")}
+ else if(!x){$("hd").textContent="質問する";
+  h+='<div class="cnt">どの件のこと？（期限が近い順）</div><input id="af" placeholder="🔍 件の名前で探す" value="'+esc(aFind)+'" style="width:100%;border:1.5px solid var(--bd);border-radius:10px;padding:9px;font-size:14px;margin-bottom:8px">';
   const hit=L.filter(y=>!aFind||(y.short+y.head+JSON.stringify(y.facts||{})).indexOf(aFind)>=0);
-  h+=hit.length?hit.map(y=>'<div class="row" data-aq="'+esc(y.qid)+'" style="cursor:pointer"><div class="rt">'+esc(y.short||y.head)+'</div><div class="rm">'+esc(y.label)+'</div></div>').join(""):'<div class="msg">見つかりません</div>';
-  h+='<div class="box"><div class="t">件を選ばずに大川に聞く</div><textarea id="at" placeholder="聞きたいこと"></textarea><button class="send" id="as" style="margin-top:8px">大川に送る</button></div>';
- }else{
-  const fs=aFacts(x);
-  h+='<span id="aback" style="color:#0a66c2;font-size:13px;cursor:pointer">← 件を選び直す</span><div class="ch">'+esc(x.short||x.head)+'</div>';
-  if(fs.length){h+='<div class="cnt">押すと、分かっていることが出ます</div><div class="chips">'+fs.map((f,i)=>'<button class="chip'+(aShow===String(i)?" on":"")+'" data-af="'+i+'">'+esc(f[0])+'</button>').join("")+'</div>';
-   if(aShow!==""&&fs[+aShow])h+='<div class="box"><div class="t">'+esc(fs[+aShow][0])+'</div><div class="s">'+esc(fs[+aShow][1])+'</div></div>'}
-  if(x.label==="あなたの番"&&x.mine1)h+='<button class="send" id="ago" style="margin-bottom:10px">この件の問いに答える（'+x.open+'問）</button>';
-  h+='<div class="box"><div class="t">ほかに聞きたいこと</div><div class="s" style="margin-bottom:6px">大川に届きます。返事はこのトークに来ます</div><textarea id="at" placeholder="例：撮影は何時からですか"></textarea><button class="send" id="as" style="margin-top:8px">大川に送る</button></div>';
-  if(x.facts&&x.facts.link)h+='<a class="lk" href="'+esc(x.facts.link)+'" target="_blank">🔗 この案件の詳細・履歴</a>';
+  h+=hit.length?hit.map(y=>{const d=aDue(y);return '<div class="row" data-aq="'+esc(y.qid)+'" style="cursor:pointer"><div class="rt">'+esc(y.short||y.head)+'</div><div class="rm" style="white-space:normal">'+(d?'<span class="tg tr">'+esc(d)+'</span>':'<span class="tg">期限なし</span>')+(y.label==="あなたの番"?'<span class="tg tgn">あなたの番 '+y.open+'問</span>':'<span class="tg">'+(y.open?"ほかの人の答え待ち":"そろった")+'</span>')+'</div></div>'}).join(""):'<div class="msg">見つかりません</div>';
+  h+='<div class="cnt" style="margin-top:14px">件に関係ないこと</div><div class="row" data-aq="_none" style="cursor:pointer"><div class="rt">✏️ 件を選ばずに大川さんに聞く</div></div>';
+ }else{$("hd").textContent=x.short||x.head;
+  const F=aFacts(x);
+  h+='<span id="aback" class="bk">← 件を選び直す</span>';
+  if(aWrite){h+=box("大川さんに聞く","「"+esc(x.short||x.head)+"」の件として届きます。返事はこのトークに来ます")}
+  else{
+   h+='<div class="cnt">何が知りたい？</div>';
+   AQ.forEach(q=>{const v=F.A[q[0]];h+='<button class="qb'+(aShow===q[0]?" on":"")+'" data-af="'+q[0]+'">'+q[1]+" "+q[2]+'</button>';
+    if(aShow===q[0])h+=v?'<div class="ans">'+esc(v)+'<span class="sm">案件の表から。これで分からなければ <a href="#" data-ak="'+q[0]+'">大川さんに聞く</a></span></div>'
+     :'<div class="ans no">まだ表にありません。<button class="send" style="padding:9px;font-size:13.5px;margin-top:8px" data-ak="'+q[0]+'">大川さんに聞く「'+esc(q[3])+'」</button></div>'});
+   F.more.forEach((r,i)=>{const k="r"+i;h+='<button class="qb'+(aShow===k?" on":"")+'" data-af="'+k+'">・'+esc(r[0])+'</button>';if(aShow===k)h+='<div class="ans">'+esc(r[1])+'</div>'});
+   if(x.label==="あなたの番"&&x.mine1)h+='<button class="send" id="ago" style="margin-top:10px">この件の問いに答える（'+x.open+'問）</button>';
+   h+='<button class="send2" data-ak="free">✏️ ほかのことを大川さんに聞く</button>';
+   if(x.facts&&x.facts.link)h+='<a class="lk" href="'+esc(x.facts.link)+'" target="_blank">🔗 この案件の詳細・履歴</a>';
+  }
  }
  $("mn").innerHTML=h+mClose();
  const af=$("af");if(af)af.oninput=()=>{aFind=af.value.trim();const p=af.selectionStart;mAsk();const n=$("af");n.focus();n.setSelectionRange(p,p)};
- document.querySelectorAll("[data-aq]").forEach(b=>b.onclick=()=>{aQ=b.dataset.aq;aShow="";mAsk()});
+ document.querySelectorAll("[data-aq]").forEach(b=>b.onclick=()=>{aQ=b.dataset.aq;aShow="";aWrite=false;aPre="";mAsk()});
  document.querySelectorAll("[data-af]").forEach(b=>b.onclick=()=>{aShow=aShow===b.dataset.af?"":b.dataset.af;mAsk()});
- const bk=$("aback");if(bk)bk.onclick=()=>{aQ="";mAsk()};
+ document.querySelectorAll("[data-ak]").forEach(b=>b.onclick=e=>{e.preventDefault();const q=AQ.find(y=>y[0]===b.dataset.ak);aPre=q?q[3]:"";aWrite=true;mAsk();const t=$("at");if(t){t.focus();t.setSelectionRange(t.value.length,t.value.length)}});
+ const bk=$("aback");if(bk)bk.onclick=()=>{if(aWrite){aWrite=false;aPre=""}else{aQ="";aShow=""}mAsk()};
  const go=$("ago");if(go)go.onclick=()=>{location.href=location.pathname+"?q="+encodeURIComponent(aQ)};
- $("as").onclick=async()=>{const t=$("at").value.trim();if(!t){$("at").focus();return}if(aBusy)return;aBusy=true;$("as").disabled=true;$("as").textContent="送っています…";
-  try{const r=await api({op:"askq",q:aQ,text:t});if(!r.ok){aBusy=false;return err(r.err)}
-   $("mn").innerHTML='<div class="box ok">大川に送りました</div><div class="msg">'+(r.name?esc(r.name)+" の件の質問です。":"")+'返事はこのトークに来ます</div>'+mClose()}catch(e){err("送れませんでした："+e.message)}aBusy=false};
+ const as=$("as");if(as)as.onclick=async()=>{const t=$("at").value.trim();if(!t){$("at").focus();return}if(aBusy)return;aBusy=true;as.disabled=true;as.textContent="送っています…";
+  try{const seen=aShow&&!/^r\d/.test(aShow)?(AQ.find(y=>y[0]===aShow)||[])[2]:"";
+   const r=await api({op:"askq",q:aQ==="_none"?"":aQ,text:t+(seen?"\n（「"+seen+"」を見たあと）":"")});if(!r.ok){aBusy=false;return err(r.err)}aSent(r)}catch(e){err("送れませんでした："+e.message)}aBusy=false};
 }
 async function mStart(v){
  if(v==="ask"){const r=await api({op:"list"});if(!r.ok)return err(r.err);M=r;return mAsk()}
