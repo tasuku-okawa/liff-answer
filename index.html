@@ -23,7 +23,7 @@ button.send:disabled{background:#b9c2bd}.msg{text-align:center;padding:30px 16px
 .row{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px}.row .rt{font-weight:700;font-size:13.5px;line-height:1.45}
 .row .rm{font-size:12px;color:#555;margin-top:5px;line-height:1.55;white-space:pre-wrap}.row button{margin-top:8px;border:0;border-radius:10px;padding:8px 14px;background:var(--g);color:#fff;font-weight:700;font-size:13px}
 .lab{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;margin-right:6px;vertical-align:1px}
-.l-me{background:var(--g);color:#fff}.l-wait{background:#eef1f5;color:#555}.l-done{background:#f1f3f4;color:#999}
+.l-me{background:var(--g);color:#fff}.l-go{background:#e8f0fe;color:#1a56c4}.stg{display:inline-block;font-size:10.5px;font-weight:700;border-radius:6px;padding:1px 6px;background:#fff3c4;color:#8a6d00;vertical-align:1px}.nx{font-size:12px;color:#1a56c4;margin-top:3px}.row .lab{font-size:11px}.row .lab.l-me{color:#fff}.row .lab.l-wait{color:#555}.row .lab.l-go{color:#1a56c4}.row .lab.l-done{color:#999}.l-wait{background:#eef1f5;color:#555}.l-done{background:#f1f3f4;color:#999}
 .qb{display:block;width:100%;text-align:left;background:#fff;border:1.5px solid var(--bd);border-radius:10px;padding:10px 12px;font-size:14px;margin-bottom:6px;color:#1d1d1f}.qb.on{border-color:var(--g);background:#f3fcf6}
 .ans{background:#f3fcf6;border:1px solid #bfe9cf;border-radius:10px;padding:10px 12px;font-size:13px;line-height:1.65;margin:-2px 0 8px;white-space:pre-wrap}.ans.no{background:#fff8e1;border-color:#f1d98a}.ans .sm{display:block;color:#666;font-size:11.5px;margin-top:5px;white-space:normal}.ans a{color:#0a66c2}
 .tg{display:inline-block;font-size:11px;border-radius:6px;padding:1px 7px;margin-right:5px;background:#eef1f5;color:#555;font-weight:700}.tr{background:#fde8e7;color:#c5221f}.tgn{background:#e7f8ee;color:#137333}
@@ -33,6 +33,16 @@ button.send:disabled{background:#b9c2bd}.msg{text-align:center;padding:30px 16px
 label.send{display:block;border-radius:12px;padding:14px;font-size:16px;font-weight:700;background:var(--g);color:#fff;text-align:center;cursor:pointer}label.send2{display:block;border:1.5px solid var(--g);border-radius:12px;padding:13px;font-size:15px;font-weight:700;background:#fff;color:#137333;text-align:center;cursor:pointer}
 .thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:10px}.th{position:relative;aspect-ratio:3/4;border-radius:10px;overflow:hidden;background:#fff;border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;font-size:11px;text-align:center}.th img{width:100%;height:100%;object-fit:cover}.th .rm{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;background:rgba(0,0,0,.55);color:#fff;font-size:14px;line-height:24px;padding:0}.th .tk{position:absolute;bottom:4px;right:6px;font-size:18px}.th .tk.ng{color:#c5221f}
 label.send,label.send2{display:block}#xs{margin-bottom:10px}
+
+.lead2{margin:2px 2px 14px}.lead2 .t{font-size:16px}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:6px}
+.tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;background:#fff;border:1.5px solid var(--bd);border-radius:16px;padding:22px 8px;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,.05)}
+.tile .ic{font-size:34px;line-height:1}.tile b{font-size:16px}.tile small{font-size:11.5px;color:#777}
+.tile.main{background:var(--g);border-color:var(--g);color:#fff}.tile.main small{color:#e7f8ee}
+.tile:active{transform:scale(.97)}
+button.closeb{display:block;width:100%;margin-top:18px;border:0;background:none;color:#666;font-size:14px;padding:10px;text-decoration:underline;text-underline-offset:3px}
+.addb{display:block;text-align:center;border:1.5px dashed #b9c2bd;border-radius:12px;padding:10px;color:#137333;font-weight:700;font-size:13.5px;margin-bottom:12px;cursor:pointer;background:#fff}
+button.send2b{display:block;width:100%;border:1.5px solid var(--g);border-radius:12px;padding:12px;font-size:15px;font-weight:700;background:#fff;color:#137333}
 </style></head><body>
 <header id="hd">読み込み中…</header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -86,7 +96,7 @@ $("sd").onclick=async()=>{
 };
 /* ---- 下のメニュー（v=todo まだ答えていない問い・v=list 大川からの質問一覧・v=ask 質問する） ---- */
 let M=null,mSel={},mNote={},mBusy=false,mLf="";
-function mClose(){return liff.isInClient&&liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">閉じる</button>':""}
+function mClose(){return liff.isInClient&&liff.isInClient()?'<button class="closeb" onclick="liff.closeWindow()">閉じる</button>':""}
 function mStOf(state,q){const x=(state||[]).find(y=>y.q===q);return x&&x.a.length?x.a.map(a=>a.v+"（"+a.who+"）").join("／"):""}
 function mSum(summary){return (summary||[]).map(c=>(c.text?esc(c.text)+"\n":"")+rowsHtml(c.rows)).join("\n").trim()}
 function mPicked(){return Object.keys(Object.assign({},mSel,mNote)).filter(k=>mSel[k]||mNote[k])}
@@ -136,12 +146,13 @@ function mList(){
  const L=M.list||[];$("hd").textContent="大川からの質問一覧";$("ft").hidden=true;
  const cnt=k=>k==="all"?L.length:L.filter(x=>x.label===k).length;
  if(!mLf)mLf=cnt("あなたの番")?"あなたの番":"all";
- const F=[["あなたの番","あなたの番"],["待ち","待ち"],["完了","完了"],["all","全部"]],cls={"あなたの番":"l-me","待ち":"l-wait","完了":"l-done"};
+ const F=[["あなたの番","あなたの番"],["待ち","待ち"],["進行中","進行中"],["完了","完了"],["all","全部"]],cls={"あなたの番":"l-me","待ち":"l-wait","進行中":"l-go","完了":"l-done"};
  const rows=L.filter(x=>mLf==="all"||x.label===mLf);
  $("mn").innerHTML='<div class="filt">'+F.map(([k,v])=>'<button data-f="'+k+'" class="'+(mLf===k?"on":"")+'">'+v+'（'+cnt(k)+'）</button>').join("")+'</div>'
-  +(rows.length?rows.map(x=>'<div class="row"><div class="rt"><span class="lab '+cls[x.label]+'">'+esc(x.label)+'</span>'+esc(x.head)+'</div><div class="rm">'
+  +(rows.length?rows.map(x=>'<div class="row"><div class="rt"><span class="lab '+cls[x.label]+'">'+esc(x.label)+'</span>'+esc(x.qid?x.head:x.head)+(x.stage?' <span class="stg">'+esc(x.stage)+'</span>':'')+'</div>'
+   +(x.next||x.status?'<div class="nx">'+esc([x.status,x.who2,x.next].filter(Boolean).join("・"))+'</div>':'')+'<div class="rm">'
    +x.state.map(y=>(y.a.length?"✅ ":"⬜ ")+esc(y.q)+(y.a.length?"："+esc(y.a.map(a=>a.v+"（"+a.who+"）").join("／")):(y.to?"（"+esc(AT[y.to]||y.to)+"）":""))).join("\n")+'</div>'
-   +(x.label==="あなたの番"?(x.mine1?'<button data-q="'+esc(x.qid)+'">答える（'+x.open+'問）</button>':'<div class="rm" style="color:#888">グループのカードの［答える］から答えてください</div>'):"")+'</div>').join(""):'<div class="msg">ありません</div>')+mClose();
+   +(x.label==="進行中"&&x.link?'<a class="lk" href="'+esc(x.link)+'" target="_blank">🔗 この案件の詳細・履歴</a>':"")+(x.label==="あなたの番"?(x.mine1?'<button data-q="'+esc(x.qid)+'">答える（'+x.open+'問）</button>':'<div class="rm" style="color:#888">グループのカードの［答える］から答えてください</div>'):"")+'</div>').join(""):'<div class="msg">ありません</div>')+mClose();
  document.querySelectorAll(".filt button").forEach(b=>b.onclick=()=>{mLf=b.dataset.f;mList()});
  document.querySelectorAll(".row button[data-q]").forEach(b=>b.onclick=()=>{location.href=location.pathname+"?q="+encodeURIComponent(b.dataset.q)});
 }
@@ -188,16 +199,16 @@ let X={files:[],thumbs:[],cs:[],cid:"",busy:false,live:false,who:""};
 function xRid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 async function xPick(){X={files:[],thumbs:[],cs:X.cs||[],cid:"",busy:false,live:X.live,who:X.who};$("hd").textContent="経費を送る";$("ft").hidden=true;
  if(!X.cs.length){try{const r=await api({op:"expcases"});if(r.ok){X.cs=r.cs||[];X.live=r.live;X.who=r.who}}catch(e){}}
- $("mn").innerHTML='<div class="box"><div class="t">🧾 領収書を送る</div><div class="s">写真を選んで［送る］だけ。読み取りはあとで自動でやります（待たなくてOK）。何枚でもまとめて選べます</div></div>'
- +'<label class="send" style="margin-bottom:10px">📷 撮る<input id="xc" type="file" accept="image/*" capture="environment" hidden></label>'
- +'<label class="send2">🖼 写真・PDF を選ぶ（何枚でも）<input id="xf" type="file" accept="image/*,application/pdf" multiple hidden></label>'+mClose();
+ $("mn").innerHTML='<div class="lead2"><div class="t">🧾 領収書を送る</div><div class="s">選んで送るだけ。読み取りはあとで自動でやります</div></div>'
+ +'<div class="tiles"><label class="tile main"><span class="ic">📷</span><b>撮る</b><small>その場で1枚</small><input id="xc" type="file" accept="image/*" capture="environment" hidden></label>'
+ +'<label class="tile"><span class="ic">🖼</span><b>選ぶ</b><small>写真・PDF 何枚でも</small><input id="xf" type="file" accept="image/*,application/pdf" multiple hidden></label></div>'+mClose();
  ["xc","xf"].forEach(id=>$(id).onchange=e=>{const fs=Array.from(e.target.files||[]);if(fs.length)xAdd(fs)});}
 function xShrink(file){return new Promise((ok,ng)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{const m=1600,k=Math.min(1,m/Math.max(im.width,im.height));const c=document.createElement("canvas");c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext("2d").drawImage(im,0,0,c.width,c.height);const d=c.toDataURL("image/jpeg",0.82);URL.revokeObjectURL(u);ok(d)};im.onerror=()=>ng(new Error("写真を開けませんでした"));im.src=u})}
 function xB64(file){return new Promise((ok,ng)=>{const r=new FileReader();r.onload=()=>ok(String(r.result));r.onerror=()=>ng(new Error("ファイルを読めませんでした"));r.readAsDataURL(file)})}
 function xAdd(fs){fs.forEach(f=>{if(X.files.length<20)X.files.push({f:f,rid:xRid(),st:"",url:/^image/.test(f.type)?URL.createObjectURL(f):""})});xForm()}
 function xForm(){const n=X.files.length;if(!n)return xPick();
  let h='<div class="thumbs">'+X.files.map((x,i)=>'<div class="th">'+(x.url?'<img src="'+x.url+'">':'<span>📄 '+esc(x.f.name)+'</span>')+(x.st==="ok"?'<b class="tk">✅</b>':x.st==="ng"?'<b class="tk ng">！</b>':'')+(X.busy||x.st==="ok"?'':'<button class="rm" data-rm="'+i+'">×</button>')+'</div>').join("")+'</div>';
- h+='<label class="send2" style="margin-bottom:10px;padding:9px;font-size:13.5px">＋ もっと選ぶ<input id="xm" type="file" accept="image/*,application/pdf" multiple hidden></label>';
+ h+='<label class="addb">＋ もっと選ぶ<input id="xm" type="file" accept="image/*,application/pdf" multiple hidden></label>';
  h+='<div class="cnt">どの件？（選ばなければ日付で決めます）</div><div class="chips">'+X.cs.map(c=>'<button class="chip'+(X.cid===c.id?" on":"")+'" data-xc="'+esc(c.id)+'">'+esc(c.name)+'</button>').join("")+'<button class="chip'+(!X.cid?" on":"")+'" data-xc="">おまかせ（日付で）</button></div>';
  if(X.who==="江藤")h+='<div class="s" style="margin:4px 2px 8px">案件のコストとして付けます（申請は江藤さんご自身で）</div>';
  h+='<button class="send" id="xs">送る（'+n+'枚）</button>'+mClose();
@@ -213,7 +224,7 @@ async function xSend(){if(X.busy)return;X.busy=true;const b=$("xs");b.disabled=t
    const r=await api({op:"expquick",rid:x.rid,b64:d.split(",")[1],mime:mime,cid:X.cid,cname:c?c.name:""});x.st=r.ok?"ok":"ng";x.err=r.err}catch(e){x.st="ng";x.err=e.message}}
  X.busy=false;const ng=X.files.filter(x=>x.st!=="ok");
  if(ng.length){xForm();alertBox(ng.length+"枚 送れませんでした。もう一度［送る］を押してください（"+(ng[0].err||"")+"）");return}
- $("mn").innerHTML='<div class="box ok">✅ '+X.files.length+'枚 受け取りました</div><div class="box"><div class="s">読み取りは1〜2分であとから自動でやります。'+(X.who==="江藤"?'案件のコストとして付けます（申請は江藤さんご自身で）':'大川さんが確かめたら、月末のお支払いで精算します')+(X.live?'':'<br>【試し】経費タブにはまだ書いていません')+'</div></div><button class="send" onclick="xPick()">もっと送る</button>'+mClose();}
+ $("mn").innerHTML='<div class="box ok">✅ '+X.files.length+'枚 受け取りました</div><div class="box"><div class="s">読み取りは1〜2分であとから自動でやります。'+(X.who==="江藤"?'案件のコストとして付けます（申請は江藤さんご自身で）':'大川さんが確かめたら、月末のお支払いで精算します')+(X.live?'':'<br>【試し】経費タブにはまだ書いていません')+'</div></div><button class="send2b" onclick="xPick()">＋ もっと送る</button>'+(liff.isInClient&&liff.isInClient()?'<button class="send" style="margin-top:10px" onclick="liff.closeWindow()">閉じる</button>':'');}
 function alertBox(m){let a=$("xa_msg");if(!a){a=document.createElement("div");a.id="xa_msg";a.className="box";a.style.cssText="border-color:#f3b8b4;background:#fde8e7;color:#c5221f;font-weight:700";$("mn").prepend(a)}a.textContent=m;window.scrollTo(0,0)}
 async function mStart(v){
  if(v==="ask"){const r=await api({op:"list"});if(!r.ok)return err(r.err);M=r;return mAsk()}
