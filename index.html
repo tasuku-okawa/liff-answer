@@ -16,8 +16,16 @@ button.send:disabled{background:#b9c2bd}.msg{text-align:center;padding:30px 16px
 .to{display:inline-block;font-size:11px;font-weight:400;background:#eef1f5;color:#555;border-radius:6px;padding:1px 7px;margin-right:6px;vertical-align:2px}
 .as{display:flex;gap:6px;margin:0 2px 10px;flex-wrap:wrap}.as button{border:1.5px solid var(--bd);background:#fff;border-radius:999px;padding:5px 10px;font-size:12px}.as button.on{background:#222;color:#fff;border-color:#222}
 .lk{display:block;text-align:center;border:1px solid var(--bd);border-radius:10px;padding:9px;color:#0a66c2;text-decoration:none;margin-top:8px}
+.ch{font-weight:700;font-size:13.5px;margin:16px 2px 6px}.hint{font-size:12px;color:#666;text-align:center;margin-top:6px}
+.prog{height:5px;background:#e3e5e8;border-radius:9px;overflow:hidden;margin:-4px 2px 10px}.prog b{display:block;height:100%;background:var(--g)}
+.filt{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.filt button{border:1.5px solid var(--bd);background:#fff;border-radius:999px;padding:6px 11px;font-size:12.5px}
+.filt button.on{background:#222;color:#fff;border-color:#222}
+.row{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:8px}.row .rt{font-weight:700;font-size:13.5px;line-height:1.45}
+.row .rm{font-size:12px;color:#555;margin-top:5px;line-height:1.55;white-space:pre-wrap}.row button{margin-top:8px;border:0;border-radius:10px;padding:8px 14px;background:var(--g);color:#fff;font-weight:700;font-size:13px}
+.lab{display:inline-block;font-size:11px;font-weight:700;border-radius:6px;padding:2px 7px;margin-right:6px;vertical-align:1px}
+.l-me{background:var(--g);color:#fff}.l-wait{background:#eef1f5;color:#555}.l-done{background:#f1f3f4;color:#999}
 </style></head><body>
-<header id="hd">読み込み中…</header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button></footer>
+<header id="hd">読み込み中…</header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
 const LIFF_ID="2012262067-htwZvG1K";
@@ -66,10 +74,77 @@ $("sd").onclick=async()=>{
    +(liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">閉じる</button>':"");
  }catch(e){err("送れませんでした："+e.message)}
 };
+/* ---- 下のメニュー（v=todo まだ答えていない問い・v=list 大川からの質問一覧・v=ask 質問する） ---- */
+let M=null,mSel={},mNote={},mBusy=false,mLf="";
+function mClose(){return liff.isInClient&&liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">閉じる</button>':""}
+function mStOf(state,q){const x=(state||[]).find(y=>y.q===q);return x&&x.a.length?x.a.map(a=>a.v+"（"+a.who+"）").join("／"):""}
+function mSum(summary){return (summary||[]).map(c=>(c.text?esc(c.text)+"\n":"")+rowsHtml(c.rows)).join("\n").trim()}
+function mPicked(){return Object.keys(Object.assign({},mSel,mNote)).filter(k=>mSel[k]||mNote[k])}
+function mUpd(){const n=mPicked().length;$("sd").disabled=!n||mBusy;$("sd").textContent=mBusy?"送っています…":n?"送信（"+n+"問）":"選んでください"}
+function mShown(c){return c.qs.filter(q=>{if(c.open.indexOf(q.k)>=0)return true;if(!q.when)return false;const p=c.qs.find(y=>y.q===q.when.q);if(!p||c.open.indexOf(p.k)<0)return false;return (mSel[c.qid+"|"+p.k]||"").indexOf(q.when.v)===0})}
+function mTodo(){
+ const cs=M.cases||[];$("hd").textContent="まだ答えていない問い（"+cs.length+"件）";
+ if(!cs.length){$("mn").innerHTML='<div class="box ok">まだ答えていない問いはありません</div><div class="msg">大川から聞きたいことが来たら、このトークにカードが届きます</div>'+mClose();$("ft").hidden=true;return}
+ let h="",total=0,got=0;
+ cs.forEach(c=>{
+  const qs=mShown(c);
+  c.qs.forEach(q=>{if(qs.indexOf(q)<0){delete mSel[c.qid+"|"+q.k];delete mNote[c.qid+"|"+q.k]}});
+  h+='<div class="ch">'+esc(c.head)+'</div>';
+  const sm=mSum(c.summary),lk=(c.summary||[]).find(x=>x.link);
+  if(sm||lk)h+='<div class="box">'+(sm?'<details'+(cs.length===1?" open":"")+'><summary>案件の概要</summary><div class="s" style="margin-top:6px">'+sm+'</div></details>':"")+(lk?'<a class="lk" href="'+esc(lk.link)+'" target="_blank">🔗 この案件の詳細・履歴</a>':"")+'</div>';
+  qs.forEach(q=>{const key=c.qid+"|"+q.k;total++;if(mSel[key]||mNote[key])got++;
+   const bg=((q.text?esc(q.text)+"\n":"")+rowsHtml(q.rows)).trim(),st=mStOf(c.state,q.q);
+   h+='<div class="box"><div class="t">'+esc(q.q)+'</div>'+(bg?'<div class="s">'+bg+'</div>':"")+'<div class="chips">'+q.btns.map(b=>'<button class="chip'+(mSel[key]===b?" on":"")+'" data-mk="'+key+'" data-v="'+esc(b)+'">'+esc(b)+'</button>').join("")+'</div>'
+    +'<textarea placeholder="ひとこと（任意）" data-mn="'+key+'">'+esc(mNote[key]||"")+'</textarea>'+(st?'<div class="st">いまの答え：'+esc(st)+'</div>':"")+'</div>'});
+ });
+ $("mn").innerHTML='<div class="cnt">'+total+'問中 '+got+'問</div><div class="prog"><b style="width:'+(total?got/total*100:0)+'%"></b></div>'+h;
+ $("ft").hidden=false;$("hn").textContent=got<total?"答えた問いだけ先に送れます。残りはまたこのメニューから":"全部そろいました";
+ document.querySelectorAll("[data-mk]").forEach(b=>b.onclick=()=>{const k=b.dataset.mk;mSel[k]=mSel[k]===b.dataset.v?undefined:b.dataset.v;mTodo()});
+ document.querySelectorAll("[data-mn]").forEach(t=>t.oninput=()=>{mNote[t.dataset.mn]=t.value;mUpd()});
+ mUpd();
+}
+async function mSend(){
+ if(mBusy)return;mBusy=true;mUpd();
+ try{
+  const by={};mPicked().forEach(key=>{const i=key.lastIndexOf("|"),q=key.slice(0,i),k=+key.slice(i+1);(by[q]=by[q]||[]).push({k,v:mSel[key]||"その他",note:mNote[key]||""})});
+  const items=Object.keys(by).map(q=>({q,answers:by[q]}));
+  const r=await api({op:"ansMany",items});if(!r.ok){mBusy=false;return err(r.err)}
+  const lines=(r.doneTexts||[]).slice(),doneQ={};
+  items.forEach(it=>{const c=(M.cases||[]).find(x=>x.qid===it.q);if(!c)return;const still=(r.cases||[]).some(x=>x.qid===c.qid);
+   if(!still&&(r.doneTexts||[]).length&&lines.some(t=>t.indexOf(" そろいました")>0&&t.indexOf(c.head)>=0))return;
+   lines.push(c.head+"\n"+it.answers.map(a=>{const q=c.qs.find(x=>x.k===a.k);return (q?(q.label||q.q):"")+"："+a.v+(a.note?"（"+a.note+"）":"")}).join("\n"))});
+  let sent=false;const text=lines.join("\n\n");
+  if(text&&liff.isInClient()){try{await liff.sendMessages([{type:"text",text:text.slice(0,4900)}]);sent=true}catch(e){}}
+  mSel={};mNote={};M=r;$("ft").hidden=true;const left=(r.cases||[]).length;
+  $("mn").innerHTML='<div class="box ok">送信しました（'+(r.sent||0)+'件）</div>'+(sent?'<div class="msg">トークに答えを出しました</div>':"")
+   +(left?'<div class="msg">まだ答えていない問いが '+left+'件 あります</div><button class="send" id="more">続けて答える</button><div style="height:8px"></div>':'<div class="msg">まだ答えていない問いはもうありません</div>')+mClose();
+  if(left)$("more").onclick=()=>mTodo();
+ }catch(e){err("送れませんでした："+e.message)}
+ mBusy=false;
+}
+function mList(){
+ const L=M.list||[];$("hd").textContent="大川からの質問一覧";$("ft").hidden=true;
+ const cnt=k=>k==="all"?L.length:L.filter(x=>x.label===k).length;
+ if(!mLf)mLf=cnt("あなたの番")?"あなたの番":"all";
+ const F=[["あなたの番","あなたの番"],["待ち","待ち"],["完了","完了"],["all","全部"]],cls={"あなたの番":"l-me","待ち":"l-wait","完了":"l-done"};
+ const rows=L.filter(x=>mLf==="all"||x.label===mLf);
+ $("mn").innerHTML='<div class="filt">'+F.map(([k,v])=>'<button data-f="'+k+'" class="'+(mLf===k?"on":"")+'">'+v+'（'+cnt(k)+'）</button>').join("")+'</div>'
+  +(rows.length?rows.map(x=>'<div class="row"><div class="rt"><span class="lab '+cls[x.label]+'">'+esc(x.label)+'</span>'+esc(x.head)+'</div><div class="rm">'
+   +x.state.map(y=>(y.a.length?"✅ ":"⬜ ")+esc(y.q)+(y.a.length?"："+esc(y.a.map(a=>a.v+"（"+a.who+"）").join("／")):(y.to?"（"+esc(AT[y.to]||y.to)+"）":""))).join("\n")+'</div>'
+   +(x.label==="あなたの番"?(x.mine1?'<button data-q="'+esc(x.qid)+'">答える（'+x.open+'問）</button>':'<div class="rm" style="color:#888">グループのカードの［答える］から答えてください</div>'):"")+'</div>').join(""):'<div class="msg">ありません</div>')+mClose();
+ document.querySelectorAll(".filt button").forEach(b=>b.onclick=()=>{mLf=b.dataset.f;mList()});
+ document.querySelectorAll(".row button[data-q]").forEach(b=>b.onclick=()=>{location.href=location.pathname+"?q="+encodeURIComponent(b.dataset.q)});
+}
+async function mStart(v){
+ if(v==="ask"){$("hd").textContent="質問する";$("mn").innerHTML='<div class="box"><div class="t">準備中です</div><div class="s">いまは、このトークにそのまま書いてください。大川が見て返します。</div></div>'+mClose();return}
+ const r=await api({op:v});if(!r.ok)return err(r.err);M=r;
+ if(v==="todo"){$("sd").onclick=mSend;mTodo()}else mList();
+}
 (async()=>{
  try{
   await liff.init({liffId:LIFF_ID,withLoginOnExternalBrowser:true});
-  qid=new URLSearchParams(location.search).get("q")||"";
+  const P=new URLSearchParams(location.search);qid=P.get("q")||"";const V=P.get("v")||"";
+  if(!qid&&(V==="todo"||V==="list"||V==="ask"))return mStart(V);
   if(!qid)return err("件の番号がありません（カードの［答える］から開いてください）");
   const r=await api({op:"load"});if(!r.ok)return err(r.err);
   D=r;if(!D.qs.length)return err("この件に、あなたへの問いはありません");draw();
