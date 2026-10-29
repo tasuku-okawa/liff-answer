@@ -58,7 +58,7 @@ $("sd").onclick=async()=>{
   const ctx=liff.getContext()||{};
   let text="";
   if(r.doneText)text=r.doneText;
-  else if(ctx.type==="utou")text=(D.head?D.head+"\n":"")+answers.map(a=>{const q=D.qs.find(x=>x.k===a.k);return (q?q.q:"")+"："+a.v+(a.note?"（"+a.note+"）":"")}).join("\n");
+  else if(ctx.type==="utou")text=(D.short||D.head||"")+"\n"+answers.map(a=>{const q=D.qs.find(x=>x.k===a.k);return (q?(q.label||q.q):"")+"："+a.v+(a.note?"（"+a.note+"）":"")}).join("\n");
   let sent=false;if(text&&liff.isInClient()){try{await liff.sendMessages([{type:"text",text:text.slice(0,4900)}]);sent=true}catch(e){}}
   D=r;$("ft").hidden=true;
   $("mn").innerHTML='<div class="box ok">送信しました</div><div class="box"><div class="t">いまの状況</div><div class="s">'+r.state.map(x=>(x.a.length?"✅ ":"⬜ ")+esc(x.q)+(x.a.length?"："+esc(x.a.map(a=>a.v+"（"+a.who+"）").join("／")):"")).join("\n")+'</div></div>'
