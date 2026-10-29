@@ -13,6 +13,8 @@ textarea{width:100%;border:1px solid var(--bd);border-radius:8px;padding:8px;fon
 footer{position:fixed;left:0;right:0;bottom:0;background:#fff;border-top:1px solid var(--bd);padding:10px 12px 18px}
 button.send{width:100%;border:0;border-radius:12px;padding:13px;font-size:16px;font-weight:700;background:var(--g);color:#fff}
 button.send:disabled{background:#b9c2bd}.msg{text-align:center;padding:30px 16px;color:#444}.ok{background:#e7f8ee;color:#137333;font-weight:700;text-align:center}
+.to{display:inline-block;font-size:11px;font-weight:400;background:#eef1f5;color:#555;border-radius:6px;padding:1px 7px;margin-right:6px;vertical-align:2px}
+.as{display:flex;gap:6px;margin:0 2px 10px;flex-wrap:wrap}.as button{border:1.5px solid var(--bd);background:#fff;border-radius:999px;padding:5px 10px;font-size:12px}.as button.on{background:#222;color:#fff;border-color:#222}
 .lk{display:block;text-align:center;border:1px solid var(--bd);border-radius:10px;padding:9px;color:#0a66c2;text-decoration:none;margin-top:8px}
 </style></head><body>
 <header id="hd">読み込み中…</header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button></footer>
@@ -21,7 +23,8 @@ button.send:disabled{background:#b9c2bd}.msg{text-align:center;padding:30px 16px
 const LIFF_ID="2012262067-htwZvG1K";
 const API="https://script.google.com/macros/s/AKfycbyF0FALqdPvnhmYA2dwkvCKhSQ_b-k2Vyh1X7dkx-iiMXQ4FVmWPBvEPWQlQ3N6nOGrDQ/exec?a=liff";
 const $=id=>document.getElementById(id),esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let D=null,sel={},note={},qid="";
+let D=null,sel={},note={},qid="",asWho="";
+const AT={"江藤":"@Yuu","ウンパ":"@村井亮介","大川":"@Tas"};
 function err(m){$("hd").textContent="答える";$("mn").innerHTML='<div class="msg">'+esc(m)+'</div>';$("ft").hidden=true}
 async function api(o){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(Object.assign({idToken:liff.getIDToken(),q:qid},o))});return r.json()}
 function rowsHtml(rs){return (rs||[]).map(r=>r[0]?'<b>【'+esc(String(r[0]).replace(/^ー/,""))+'】</b>\n'+esc(r[1]):esc(r[1])).join("\n")}
@@ -31,15 +34,17 @@ function draw(){
  let h="";
  const sm=(D.summary||[]).map(c=>(c.text?esc(c.text)+"\n":"")+rowsHtml(c.rows)).join("\n").trim();
  if(sm)h+='<div class="box"><details open><summary>案件の概要</summary><div class="s" style="margin-top:6px">'+sm+'</div></details></div>';
- const qs=D.qs.filter(q=>!q.when||(stateOf(q.when.q)||"").indexOf(q.when.v)===0||sel[D.qs.find(y=>y.q===q.when.q)?.k]===q.when.v);
+ if(D.who==="大川"){const ws=[...new Set(D.qs.map(q=>q.to).filter(Boolean))];if(ws.length>1)h+='<div class="as"><span class="cnt" style="margin:4px 0">試しに：</span>'+['',...ws].map(w=>'<button data-as="'+w+'" class="'+(asWho===w?"on":"")+'">'+(w?(AT[w]||w)+" として":"全部")+'</button>').join("")+'</div>';}
+ const qs=D.qs.filter(q=>!asWho||!q.to||q.to===asWho).filter(q=>!q.when||(stateOf(q.when.q)||"").indexOf(q.when.v)===0||sel[D.qs.find(y=>y.q===q.when.q)?.k]===q.when.v);
  h+='<div class="cnt">あなたへの問い '+qs.length+'問</div>';
  qs.forEach(q=>{
   const bg=((q.text?esc(q.text)+"\n":"")+rowsHtml(q.rows)).trim(),st=stateOf(q.q);
-  h+='<div class="box"><div class="t">'+esc(q.q)+'</div>'+(bg?'<div class="s">'+bg+'</div>':"")+'<div class="chips">'+q.btns.map(b=>'<button class="chip'+(sel[q.k]===b?" on":"")+'" data-k="'+q.k+'" data-v="'+esc(b)+'">'+esc(b)+'</button>').join("")+'</div>'
+  h+='<div class="box"><div class="t">'+(q.to&&D.who==="大川"?'<span class="to">'+esc(AT[q.to]||q.to)+' あて</span>':"")+esc(q.q)+'</div>'+(bg?'<div class="s">'+bg+'</div>':"")+'<div class="chips">'+q.btns.map(b=>'<button class="chip'+(sel[q.k]===b?" on":"")+'" data-k="'+q.k+'" data-v="'+esc(b)+'">'+esc(b)+'</button>').join("")+'</div>'
    +'<textarea placeholder="ひとこと（任意）" data-n="'+q.k+'">'+esc(note[q.k]||"")+'</textarea>'+(st?'<div class="st">いまの答え：'+esc(st)+'</div>':"")+'</div>';
  });
  (D.summary||[]).filter(c=>c.link).slice(0,1).forEach(c=>{h+='<a class="lk" href="'+esc(c.link)+'" target="_blank">🔗 この案件の詳細・履歴</a>'});
  $("mn").innerHTML=h;$("ft").hidden=false;
+ document.querySelectorAll("[data-as]").forEach(b=>b.onclick=()=>{asWho=b.dataset.as;draw()});
  document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{const k=b.dataset.k;sel[k]=sel[k]===b.dataset.v?undefined:b.dataset.v;draw()});
  document.querySelectorAll("textarea").forEach(t=>t.oninput=()=>{note[t.dataset.n]=t.value;upd()});
  upd();
