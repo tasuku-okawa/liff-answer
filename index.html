@@ -46,6 +46,8 @@ button.send2b{display:block;width:100%;border:1.5px solid var(--g);border-radius
 .dtr{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer;user-select:none}.dtr.gray{background:#eef0f3}.dtr.ask{background:#f1f3f4;color:#999;cursor:default}.dtr .dd{width:92px;flex:none;font-weight:700;font-size:14px}.dtr .dd.sat{color:#1a56c4}.dtr .dd.sun{color:#c5221f}.dtr .it{flex:1;font-size:12px;color:#444;line-height:1.55}.dtr .it .tm{color:#888;margin-right:6px}.dtr .it .no{color:#aaa}.dtr .pk{flex:none;min-width:48px;text-align:center;border:1.5px solid var(--bd);border-radius:999px;padding:5px 8px;font-size:13px;font-weight:700;color:#bbb}.dtr .pk.on{background:var(--g);border-color:var(--g);color:#fff}.dtr .pk.am,.dtr .pk.pm{background:#e7f8ee;border-color:var(--g);color:#137333}.dtw{font-size:12px;color:#666;margin:14px 2px 6px;font-weight:700}.tst{color:#D93025;font-weight:700;font-size:12px;margin-bottom:4px}
 .mi{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer}.mi .ic{font-size:26px;width:34px;text-align:center}.mi .tx{flex:1}.mi .tx b{display:block;font-size:15px}.mi .tx span{font-size:12px;color:#666}.mi.soon{opacity:.55}.mi .sn{font-size:11px;color:#888;border:1px solid var(--bd);border-radius:6px;padding:1px 6px}.ak{display:block;background:#fff8e1;border:1px solid #f1d98a;border-radius:12px;padding:10px 12px;margin-bottom:8px;color:#1d1d1f;text-decoration:none}.ak b{display:block}.ak span{font-size:12px;color:#666}
 .fm{background:#fff;border:1px solid var(--bd);border-radius:12px;padding:12px;margin-bottom:10px}.fm h4{margin:0 0 8px;font-size:13px;color:#555}.fm .row2{display:flex;gap:6px;align-items:center;margin:6px 0}.fm input[type=date],.fm input[type=text],.fm input[type=time]{border:1px solid var(--bd);border-radius:8px;padding:8px;font:inherit;font-size:14px;width:100%;background:#fff}.fm .lb{font-size:12px;color:#666;margin-top:8px}.pp{border-top:1px dashed var(--bd);padding-top:8px;margin-top:8px}.pp b{font-size:13px}.chip.sm{padding:6px 10px;font-size:13px}.lst{font-size:12.5px;line-height:1.6}.lst .st{display:inline-block;font-size:11px;border-radius:6px;padding:1px 6px;background:#eef1f5;color:#555;margin-right:4px}
+.rgw{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px}.rg{background:#fff;border:1px solid var(--bd);border-radius:14px;padding:14px 8px;text-align:center;cursor:pointer}.rg b{display:block;font-size:14px;margin-top:4px}.fm select{border:1px solid var(--bd);border-radius:8px;padding:8px;font:inherit;font-size:14px;background:#fff;width:100%;margin-top:6px}.fm input[type=search]{border:1px solid var(--bd);border-radius:10px;padding:10px;font:inherit;font-size:15px;width:100%;background:#f7f8fa}.sug{border:1px solid var(--bd);border-radius:10px;margin-top:6px;overflow:hidden}.sug div{padding:10px 12px;border-top:1px solid var(--bd);font-size:14px;cursor:pointer;background:#fff}.sug div:first-child{border-top:0}.sug span{float:right;font-size:11px;color:#888}.pick{background:#e7f8ee;border-radius:10px;padding:10px 12px;font-weight:700;color:#137333}.pick span{float:right;cursor:pointer;color:#555}.lg{display:flex;align-items:center;gap:8px;margin-top:6px}.lb2{font-size:12px;color:#666;width:48px;flex:none}.ck{display:block;font-size:13px;margin-top:8px}.bdg{font-size:11px;border-radius:999px;padding:3px 8px;background:#fff3c4;color:#8a6d00;cursor:pointer;white-space:nowrap}.bdg.ok{background:#e7f8ee;color:#137333}.x{color:#999;cursor:pointer;padding:0 4px}.row2 select{margin-top:0}.row2 input,.row2 select{min-width:0;flex:1}.pp:first-child{border-top:0;margin-top:0;padding-top:0}#p_j{margin-top:8px}
+.pk.ngk{background:#fde8e7;border-color:#f3b8b4;color:#c5221f}
 </style></head><body>
 <header id="hd">読み込み中…</header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -276,89 +278,212 @@ function sSub(){
  $("s_exp").onclick=()=>xPick();
  ["s_mov","s_plan","s_post"].forEach(id=>$(id).onclick=()=>alertBox("準備中です。いまは大川さんに LINE で送ってください"));
 }
+let SC=null,NGM=false,NG={};
 async function sSch(){
  $("hd").textContent="スケジュール";$("ft").hidden=true;
- const r=await api({op:"mysch"});if(!r.ok)return err(r.err);
+ const r=await api({op:"mysch"});if(!r.ok)return err(r.err);SC=r;NG=Object.assign({},r.ng||{});NGM=false;sDraw();
+}
+function sDraw(){
+ const r=SC,NS=["","終日","午前","午後"];
  let h=(r.test?'<div class="tst">【テスト・それぞれ自分の予定が見える】</div>':'');
- if(r.ask.length)h+='<div class="dtw">答えていない日程の確認</div>'+r.ask.map(a=>'<a class="ak" href="?v=dt&id='+encodeURIComponent(a.id)+'"><b>'+esc(a.name)+'</b><span>'+esc(a.day)+(a.cand?'（出られる日を選ぶ）':'（大丈夫？）')+'</span></a>').join("");
+ if(!NGM&&r.ask.length)h+='<div class="dtw">答えていない日程の確認</div>'+r.ask.map(a=>'<a class="ak" href="?v=dt&id='+encodeURIComponent(a.id)+'"><b>'+esc(a.name)+'</b><span>'+esc(a.day)+(a.cand?'（出られる日を選ぶ）':'（大丈夫？）')+'</span></a>').join("");
+ h+=NGM?'<div class="box" style="background:#fde8e7;border-color:#f3b8b4"><b>🚫 NG の日を押してください</b><div class="s">押すたびに 終日 → 午前 → 午後 → なし</div></div>':'<div class="mi" id="s_ng"><div class="ic">🚫</div><div class="tx"><b>NG の日を入れる</b></div></div>';
  if(!r.calOk)h+='<div class="hint" style="text-align:left">カレンダーは読めませんでした（アプリの予定だけ）</div>';
  let wk="";
  r.days.forEach((x,i)=>{
   const m=x.d.slice(0,7);if(m!==wk){wk=m;h+='<div class="dtw">'+(+x.d.slice(5,7))+'月</div>'}
   const cl=x.wd==="土"?" sat":x.wd==="日"?" sun":"";
-  const its=x.items.length?x.items.map(i=>'<div><span class="tm">'+esc(i.t||"終日")+'</span>'+(i.tag?'［'+esc(i.tag)+'］':'')+esc(i.what||"予定")+'</div>').join(""):'<div class="no">予定なし</div>';
-  h+='<div class="dtr'+(x.allDay?" gray":"")+'" style="cursor:default"><div class="dd'+cl+'">'+x.md+'（'+x.wd+'）'+(i===0?'<div style="font-size:11px;color:#06C755">今日</div>':'')+'</div><div class="it">'+its+'</div></div>';
+  const its=x.items.filter(i=>i.tag!=="NG").map(i=>'<div><span class="tm">'+esc(i.t||"終日")+'</span>'+(i.tag?'［'+esc(i.tag)+'］':'')+esc(i.what||"予定")+'</div>').join("")||'<div class="no">予定なし</div>';
+  const ng=NG[x.d]||"";
+  h+='<div class="dtr'+(x.allDay?" gray":"")+'" data-d="'+x.d+'" style="cursor:'+(NGM?"pointer":"default")+'"><div class="dd'+cl+'">'+x.md+'（'+x.wd+'）'+(i===0?'<div style="font-size:11px;color:#06C755">今日</div>':'')+'</div><div class="it">'+its+'</div>'+(ng||NGM?'<div class="pk'+(ng?' ngk':'')+'">'+(ng?"NG "+(ng==="終日"?"":ng):"＋")+'</div>':'')+'</div>';
  });
- h+='<div class="mi soon" id="s_ng" style="margin-top:12px"><div class="ic">🚫</div><div class="tx"><b>NG の日を入れる</b><span>出られない日を先に知らせる</span></div><span class="sn">準備中</span></div>';
- $("mn").innerHTML=h;$("s_ng").onclick=()=>alertBox("準備中です。いまは大川さんに LINE で送ってください");
+ $("mn").innerHTML=h;
+ if($("s_ng"))$("s_ng").onclick=()=>{NGM=true;sDraw();sFoot()};
+ if(NGM)document.querySelectorAll(".dtr[data-d]").forEach(el=>el.onclick=()=>{const d=el.dataset.d;const k=NS.indexOf(NG[d]||"");const v=NS[(k+1)%4];if(v)NG[d]=v;else delete NG[d];sDraw();sFoot()});
 }
+function sFoot(){const n=Object.keys(NG).length;$("ft").hidden=false;$("sd").disabled=false;$("sd").textContent="NG の日を送る（"+n+"日）";$("hn").textContent="大川さんに伝わり、日程の確認や定例の空きにも効きます";$("sd").onclick=sNgSend}
+async function sNgSend(){$("sd").disabled=true;try{const r=await api({op:"ngsave",days:NG});if(!r.ok){$("sd").disabled=false;return alertBox(r.err)}SC.ng=r.ng;NG=Object.assign({},r.ng);NGM=false;$("ft").hidden=true;sDraw();alertBox("✅ NG の日を送りました（足した "+r.add+"・外した "+r.del+"）")}catch(e){$("sd").disabled=false;alertBox("送れませんでした："+e.message)}}
 
-/* k17：［大川さんへ］手配（航空券・宿・移動・その他）＋相談 */
-let R={k:"",o:{},pay:"",cid:"",cname:"",memo:"",cs:[],last:{},who:"",test:false,busy:false,rid:""};
-const RK={fly:"✈️ 航空券",stay:"🏨 宿・延泊",move:"🚄 新幹線・レンタカー・ハイヤー",other:"✏️ その他"};
-const RNM={"大川":"大川さん","江藤":"江藤さん","ウンパ":"村井さん"};
+/* k18：［大川さんへ］手配（文字を減らす・件と乗る人は検索）＋乗る人の台帳 */
+let R={k:"",o:{},pay:"",cid:"",cname:"",memo:"",cs:[],last:{},who:"",test:false,busy:false,rid:"",pax:[],q:"",pq:""};
+const RK={fly:"✈️ 航空券",stay:"🏨 宿",move:"🚄 移動",other:"✏️ その他"};
+const RNM={"大川":"大川佑","江藤":"江藤","ウンパ":"村井亮介"};
 async function rTop(){
  $("hd").textContent="大川さんへ";$("ft").hidden=true;
- const it=(ic,t,d,id)=>'<div class="mi" id="'+id+'"><div class="ic">'+ic+'</div><div class="tx"><b>'+t+'</b><span>'+d+'</span></div></div>';
- $("mn").innerHTML='<div class="dtw">✈️ 手配してほしい</div>'+it("✈️","航空券","便の希望・クラス・航空会社","r_fly")+it("🏨","宿・延泊","日にち・場所・部屋","r_stay")+it("🚄","新幹線・レンタカー・ハイヤー","何で行くかを選ぶ","r_move")+it("✏️","その他","チケット・アクレディ・物など","r_other")+'<div class="dtw">💬 相談・お願い</div>'+it("💬","相談・お願い・質問","書いて大川さんへ","r_ask")+'<div class="dtw">頼んだもの</div><div id="r_list" class="box lst">読み込み中…</div>';
+ const g=(ic,t,id)=>'<div class="rg" id="'+id+'"><div style="font-size:26px">'+ic+'</div><b>'+t+'</b></div>';
+ $("mn").innerHTML='<div class="rgw">'+g("✈️","航空券","r_fly")+g("🏨","宿","r_stay")+g("🚄","移動","r_move")+g("✏️","その他","r_other")+'</div><div class="mi" id="r_ask"><div class="ic">💬</div><div class="tx"><b>相談・お願い・質問</b></div></div><div class="dtw">頼んだもの</div><div id="r_list" class="lst">…</div>';
  ["fly","stay","move","other"].forEach(k=>$("r_"+k).onclick=()=>rForm(k));
  $("r_ask").onclick=()=>{aQ="";mStart("ask")};
- try{const r=await api({op:"arrlist"});$("r_list").innerHTML=r.ok&&r.list.length?r.list.map(x=>'<div style="margin-bottom:8px"><span class="st">'+esc(x.st)+'</span><b>'+esc(x.kind)+'</b> '+esc(x.name||"")+' <span style="color:#888">'+esc(x.at)+(x.who&&R.who==="大川"?"・"+esc(RNM[x.who]||x.who):"")+'</span><div style="white-space:pre-wrap;color:#444">'+esc(x.text)+'</div></div>').join(""):'まだありません'}catch(e){$("r_list").textContent="読めませんでした"}
+ try{const r=await api({op:"arrlist"});$("r_list").innerHTML=r.ok&&r.list.length?r.list.map(x=>'<div class="box" style="padding:9px 11px;margin-bottom:6px"><span class="st">'+esc(x.st)+'</span><b>'+esc(x.kind)+'</b> '+esc(x.name||"")+'<div style="white-space:pre-wrap;color:#555;font-size:12px;margin-top:3px">'+esc(x.text)+'</div></div>').join(""):'<div class="hint" style="text-align:left">まだありません</div>'}catch(e){$("r_list").textContent=""}
 }
-function rChips(name,opts,cur,cls){return '<div class="chips">'+opts.map(o=>'<button class="chip sm'+(cur===o?" on":"")+'" data-n="'+name+'" data-v="'+esc(o)+'">'+esc(o)+'</button>').join("")+'</div>'}
+function rSel(name,opts,cur){return '<select data-s="'+name+'">'+opts.map(o=>'<option'+(String(cur||"")===o?" selected":"")+'>'+esc(o)+'</option>').join("")+'</select>'}
 function rIn(name,val,type,ph){return '<input type="'+(type||"text")+'" data-i="'+name+'" value="'+esc(val||"")+'" placeholder="'+esc(ph||"")+'">'}
 function rGet(o,p){return p.split(".").reduce((a,k)=>a==null?a:a[k],o)}
 function rSet(o,p,v){const ks=p.split(".");let a=o;ks.slice(0,-1).forEach((k,i)=>{if(a[k]==null)a[k]=/^\d+$/.test(ks[i+1])?[]:{};a=a[k]});a[ks[ks.length-1]]=v}
+async function rLoad(){const [r,p]=await Promise.all([api({op:"arrcases"}),api({op:"paxlist"})]);if(!r.ok)throw new Error(r.err);R.cs=r.cases;R.last=r.last||{};R.who=r.who;R.test=r.test;R.pax=p.ok?p.list:[];R.paxReady=p.ok&&p.ready}
 async function rForm(k){
- R.k=k;R.rid=Math.random().toString(36).slice(2);R.busy=false;
- if(!R.cs.length){const r=await api({op:"arrcases"});if(!r.ok)return err(r.err);R.cs=r.cases;R.last=r.last||{};R.who=r.who;R.test=r.test}
+ R.k=k;R.rid=Math.random().toString(36).slice(2);R.busy=false;R.q="";R.pq="";
+ try{if(!R.cs.length)await rLoad()}catch(e){return err(e.message)}
  R.o=JSON.parse(JSON.stringify(R.last[k]||{}));R.pay="";R.memo="";
- if(k==="fly"&&!R.o.people)R.o.people=[{who:RNM[R.who]||"村井さん",cls:"エコノミー",air:"ほかもOK"}];
- if(k==="stay"&&!R.o.people)R.o.people=[{who:RNM[R.who]||"村井さん",room:"1人部屋"}];
- if(k==="move"){if(!R.o.type)R.o.type="新幹線";if(!R.o.people)R.o.people=[{who:RNM[R.who]||"村井さん",seat:"指定席"}]}
+ const me=RNM[R.who]||"村井亮介";
+ if((k==="fly"||k==="stay"||k==="move")&&!(R.o.people||[]).length)R.o.people=[{who:me}];
+ if(k==="move"&&!R.o.type)R.o.type="新幹線";
  rDraw();
 }
+function rPaxOf(n){const z=s=>String(s||"").replace(/[\s　]/g,"").replace(/さん$/,"");return R.pax.find(p=>z(p.name)===z(n))}
 function rDraw(){
  const k=R.k,o=R.o,g=p=>rGet(o,p)||"";$("hd").textContent=RK[k];
- let h=(R.test?'<div class="tst">【テスト・頼んだ人と大川さんに見える】</div>':'')+'<div class="bk" onclick="rTop()">← 大川さんへ</div>';
- h+='<div class="fm"><h4>どの件？</h4><div class="chips">'+R.cs.map(c=>'<button class="chip sm'+(R.cid===c.id?" on":"")+'" data-c="'+esc(c.id)+'">'+esc(c.name)+(c.next?' <span style="font-size:11px;opacity:.7">'+esc(c.next)+'</span>':'')+'</button>').join("")+'<button class="chip sm'+(!R.cid?" on":"")+'" data-c="">件なし</button></div></div>';
- const ppl=(f)=>(o.people||[]).map((p,i)=>'<div class="pp"><div class="row2"><b style="flex:1">'+esc(p.who)+'</b><button class="chip sm" data-rm="'+i+'">外す</button></div>'+f(p,i)+'</div>').join("")+'<div class="chips" style="margin-top:8px">'+["村井さん","大川さん","江藤さん"].filter(w=>!(o.people||[]).some(p=>p.who===w)).map(w=>'<button class="chip sm" data-add="'+w+'">＋ '+w+'</button>').join("")+'</div>';
+ let h=(R.test?'<div class="tst">【テスト】</div>':'')+'<div class="bk" onclick="rTop()">← 戻る</div>';
+ // 件（検索）
+  h+='<div class="fm">'+(R.cid?'<div class="pick">📁 '+esc(R.cname)+' <span id="r_cx">✕</span></div>':'<input id="r_q" type="search" placeholder="🔍 件を検索（なしでもOK）" value="'+esc(R.q)+'"><div id="r_qs"></div>')+'</div>';
+ const T=["時間帯：指定なし","朝","昼","夜","一番早い便","一番遅い便"];
  if(k==="fly"){
-  const leg=(lab,p)=>'<div class="lb">'+lab+'</div>'+rIn(p+".d",g(p+".d"),"date")+'<div class="row2">'+rIn(p+".from",g(p+".from"),"text","出発（例 羽田）")+'→'+rIn(p+".to",g(p+".to"),"text","到着")+'</div>'+rChips(p+".when",["朝","昼","夜","一番遅い便","一番早い便"],g(p+".when"));
-  h+='<div class="fm"><h4>便の希望</h4>'+leg("行き","go")+rChips("oneway",["片道だけ"],o.oneway?"片道だけ":"")+(o.oneway?"":leg("帰り","back"))+'</div>';
-  h+='<div class="fm"><h4>乗る人</h4>'+ppl((p,i)=>rChips("people."+i+".cls",["エコノミー","プレエコ","ビジネス"],p.cls)+rChips("people."+i+".air",["JALだけ","ほかもOK"],p.air))+'</div>';
+  const leg=(lab,p)=>'<div class="lg"><span class="lb2">'+lab+'</span>'+rIn(p+".d",g(p+".d"),"date")+'</div><div class="row2">'+rIn(p+".from",g(p+".from"),"text","出発")+'→'+rIn(p+".to",g(p+".to"),"text","到着")+'</div>'+rSel(p+".when",T,g(p+".when")||T[0]);
+  h+='<div class="fm">'+leg("行き","go")+'<label class="ck"><input type="checkbox" id="r_one"'+(o.oneway?" checked":"")+'> 片道だけ</label>'+(o.oneway?"":'<div style="margin-top:10px">'+leg("帰り","back")+'</div>')+'</div>';
  }else if(k==="stay"){
-  h+='<div class="fm"><h4>日にち</h4><div class="lb">チェックイン</div>'+rIn("in",g("in"),"date")+'<div class="lb">チェックアウト</div>'+rIn("out",g("out"),"date")+'</div>';
-  h+='<div class="fm"><h4>場所・系列</h4>'+rChips("where",["会場の近く","駅・空港の近く","おまかせ"],g("where"))+rChips("chain",["マリオット系","こだわらない"],g("chain"))+'</div>';
-  h+='<div class="fm"><h4>泊まる人</h4>'+ppl((p,i)=>rChips("people."+i+".room",["1人部屋","同じ部屋"],p.room))+'</div>';
+  h+='<div class="fm"><div class="lg"><span class="lb2">IN</span>'+rIn("in",g("in"),"date")+'</div><div class="lg"><span class="lb2">OUT</span>'+rIn("out",g("out"),"date")+'</div><div class="row2">'+rSel("where",["場所：おまかせ","会場の近く","駅・空港の近く"],g("where"))+rSel("chain",["系列：こだわらない","マリオット系"],g("chain"))+'</div></div>';
  }else if(k==="move"){
-  h+='<div class="fm"><h4>何で行く？</h4>'+rChips("type",["新幹線","レンタカー","ハイヤー・タクシー"],g("type"))+'<div class="lb">日にち</div>'+rIn("d",g("d"),"date")+'<div class="row2">'+rIn("from",g("from"),"text",o.type==="レンタカー"?"借りる場所":"どこから")+'→'+rIn("to",g("to"),"text",o.type==="レンタカー"?"返す場所":"どこへ")+'</div>';
-  if(o.type==="新幹線")h+=rChips("timek",["着く時間","出る時間"],g("timek"))+rIn("time",g("time"),"time");
-  if(o.type==="ハイヤー・タクシー")h+='<div class="lb">時間</div>'+rIn("time",g("time"),"time");
-  if(o.type==="レンタカー")h+='<div class="lb">返す日</div>'+rIn("back",g("back"),"date")+'<div class="lb">人数・荷物</div>'+rIn("load",g("load"),"text","例 3人・機材2箱")+'<div class="lb">運転する人</div>'+rIn("driver",g("driver"),"text");
+  h+='<div class="fm">'+rSel("type",["新幹線","レンタカー","ハイヤー・タクシー"],g("type"))+'<div class="lg" style="margin-top:8px"><span class="lb2">日</span>'+rIn("d",g("d"),"date")+'</div><div class="row2">'+rIn("from",g("from"),"text",o.type==="レンタカー"?"借りる場所":"どこから")+'→'+rIn("to",g("to"),"text",o.type==="レンタカー"?"返す場所":"どこへ")+'</div>';
+  if(o.type==="新幹線")h+='<div class="row2">'+rSel("timek",["着く時間","出る時間"],g("timek"))+rIn("time",g("time"),"time")+'</div>';
+  if(o.type==="ハイヤー・タクシー")h+='<div class="lg"><span class="lb2">時間</span>'+rIn("time",g("time"),"time")+'</div>';
+  if(o.type==="レンタカー")h+='<div class="lg"><span class="lb2">返す日</span>'+rIn("back",g("back"),"date")+'</div><div class="row2">'+rIn("load",g("load"),"text","人数・荷物")+rIn("driver",g("driver"),"text","運転する人")+'</div>';
   h+='</div>';
-  if(o.type==="新幹線")h+='<div class="fm"><h4>乗る人</h4>'+ppl((p,i)=>rChips("people."+i+".seat",["指定席","グリーン"],p.seat))+'</div>';
  }else{
-  h+='<div class="fm"><h4>何を？</h4>'+rIn("what",g("what"),"text","例 アクレディ・チケット2枚")+'<div class="lb">いつまでに</div>'+rIn("by",g("by"),"date")+'</div>';
+  h+='<div class="fm">'+rIn("what",g("what"),"text","何を（例 アクレディ・チケット2枚）")+'<div class="lg" style="margin-top:8px"><span class="lb2">期限</span>'+rIn("by",g("by"),"date")+'</div></div>';
  }
- h+='<div class="fm"><h4>費用はだれ持ち？</h4>'+rChips("_pay",["先方持ち","先方に請求","こちら持ち"],R.pay)+'<div class="lb">メモ（なくてもよい）</div><textarea id="r_memo">'+esc(R.memo)+'</textarea></div>';
+ // 乗る人・泊まる人（検索で足す）
+ if(k!=="other"&&!(k==="move"&&o.type!=="新幹線")){
+  const opt=k==="fly"?(p,i)=>rSel("people."+i+".cls",["エコノミー","プレエコ","ビジネス"],p.cls)+rSel("people."+i+".air",["JALだけ","ほかもOK"],p.air||"ほかもOK"):k==="stay"?(p,i)=>rSel("people."+i+".room",["1人部屋","同じ部屋"],p.room):(p,i)=>rSel("people."+i+".seat",["指定席","グリーン"],p.seat);
+  h+='<div class="fm">'+(o.people||[]).map((p,i)=>{const x=rPaxOf(p.who);const ok=x&&x.roma&&(k!=="fly"||x.pp||x.jmb);return '<div class="pp"><div class="row2"><b style="flex:1">'+esc(p.who)+'</b>'+(k==="fly"?'<span class="bdg'+(ok?" ok":"")+'" data-pi="'+i+'">'+(ok?"✓ "+[x.jmb?"JMB":"",x.pp?"旅券":""].filter(Boolean).join("・"):"情報を入れる")+'</span>':'')+'<span class="x" data-rm="'+i+'">✕</span></div><div class="row2">'+opt(p,i)+'</div></div>'}).join("")+'<input id="r_pq" type="search" placeholder="🔍 人を検索・追加" value="'+esc(R.pq)+'"><div id="r_ps"></div></div>';
+ }
+ h+='<div class="fm">'+rSel("_pay",["費用：選んでください","先方持ち","先方に請求","こちら持ち"],R.pay||"費用：選んでください")+(R.memoOpen||R.memo?'<textarea id="r_memo" placeholder="メモ" style="margin-top:8px">'+esc(R.memo)+'</textarea>':'<div class="bk" id="r_mo" style="margin:8px 0 0">＋ メモ</div>')+'</div>';
  $("mn").innerHTML=h;
- document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{R.cid=b.dataset.c;const c=R.cs.find(x=>x.id===R.cid);R.cname=c?c.name:"";rKeep();rDraw()});
- document.querySelectorAll("[data-n]").forEach(b=>b.onclick=()=>{rKeep();const n=b.dataset.n,v=b.dataset.v;if(n==="_pay")R.pay=v;else if(n==="oneway")o.oneway=!o.oneway;else rSet(o,n,rGet(o,n)===v&&!/people|type/.test(n)?"":v);rDraw()});
+ const re=()=>{rKeep();rDraw()};
+ if($("r_q")){$("r_q").oninput=e=>{R.q=e.target.value;rSugC()};$("r_q").onfocus=rSugC}
+ if($("r_cx"))$("r_cx").onclick=()=>{R.cid="";R.cname="";re()};
+ 
+ if($("r_pq")){$("r_pq").oninput=e=>{R.pq=e.target.value.trim();rSugP()};$("r_pq").onfocus=rSugP}
  document.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{rKeep();o.people.splice(+b.dataset.rm,1);rDraw()});
- document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{rKeep();const p={who:b.dataset.add};if(R.k==="fly"){p.cls="エコノミー";p.air="ほかもOK"}if(R.k==="stay")p.room="1人部屋";if(R.k==="move")p.seat="指定席";(o.people=o.people||[]).push(p);rDraw()});
- $("ft").hidden=false;$("sd").disabled=false;$("sd").textContent="大川さんに頼む";$("hn").textContent=R.pay?"":"費用はだれ持ちかを選んでください";$("sd").onclick=rSend;
+ document.querySelectorAll("[data-pi]").forEach(b=>b.onclick=()=>{rKeep();pForm(o.people[+b.dataset.pi].who)});
+ document.querySelectorAll("[data-s]").forEach(s=>s.onchange=()=>{if(s.dataset.s==="type"){rKeep();rDraw()}});
+ if($("r_one"))$("r_one").onchange=e=>{rKeep();o.oneway=e.target.checked;rDraw()};
+ if($("r_mo"))$("r_mo").onclick=()=>{R.memoOpen=true;re()};
+ $("ft").hidden=false;$("sd").disabled=false;$("sd").textContent="大川さんに頼む";$("hn").textContent="";$("sd").onclick=rSend;
 }
-function rKeep(){document.querySelectorAll("[data-i]").forEach(i=>rSet(R.o,i.dataset.i,i.value));const m=$("r_memo");if(m)R.memo=m.value}
+/* 検索の候補だけを描き直す（日本語の入力中に全体を描き直さない） */
+function rSugC(){const box=$("r_qs");if(!box)return;const q=R.q.toLowerCase();const hit=(q?R.cs.filter(c=>(c.name+c.id).toLowerCase().includes(q)):R.cs).slice(0,6);
+ box.innerHTML=hit.length?'<div class="sug">'+hit.map(c=>'<div data-c="'+esc(c.id)+'">'+esc(c.name)+'<span>'+esc(c.next||"")+'</span></div>').join("")+'</div>':'';
+ box.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{rKeep();R.cid=b.dataset.c;const c=R.cs.find(x=>x.id===R.cid);R.cname=c?c.name:"";R.q="";rDraw()})}
+function rSugP(){const box=$("r_ps");if(!box)return;const o=R.o,q=R.pq;const ph=R.pax.filter(p=>(!q||p.name.includes(q))&&!(o.people||[]).some(x=>x.who===p.name)).slice(0,6);
+ box.innerHTML='<div class="sug">'+ph.map(p=>'<div data-add="'+esc(p.name)+'">'+esc(p.name)+'</div>').join("")+(q&&!ph.some(p=>p.name===q)?'<div data-add="'+esc(q)+'">＋「'+esc(q)+'」を足す</div>':'')+'</div>';
+ box.querySelectorAll("[data-add]").forEach(b=>b.onmousedown=b.onclick=ev=>{ev.preventDefault();rKeep();(o.people=o.people||[]).push({who:b.dataset.add});R.pq="";rDraw()})}
+function rKeep(){document.querySelectorAll("[data-i]").forEach(i=>rSet(R.o,i.dataset.i,i.value));document.querySelectorAll("[data-s]").forEach(s=>{let v=s.value;if(/^(時間帯|場所|系列)：/.test(v))v="";if(s.dataset.s==="_pay"){R.pay=/^費用：/.test(v)?"":v}else rSet(R.o,s.dataset.s,v)});const m=$("r_memo");if(m)R.memo=m.value}
 async function rSend(){
- rKeep();if(R.busy)return;if(!R.pay)return alertBox("費用はだれ持ちかを選んでください");
- const need={fly:["go.d","行きの日にち"],stay:["in","チェックインの日"],move:["d","日にち"],other:["what","何を"]}[R.k];if(need&&!rGet(R.o,need[0]))return alertBox(need[1]+"を入れてください");
+ rKeep();if(R.busy)return;
+ const need={fly:["go.d","行きの日"],stay:["in","IN の日"],move:["d","日"],other:["what","何を"]}[R.k];if(need&&!rGet(R.o,need[0]))return alertBox(need[1]+"を入れてください");
+ if(!R.pay)return alertBox("費用はだれ持ちかを選んでください");
  const o=JSON.parse(JSON.stringify(R.o));if(R.k==="move"&&o.timek&&o.time)o.time=o.time+(o.timek==="着く時間"?"着":"発");
  R.busy=true;$("sd").disabled=true;
  try{const r=await api({op:"arrsave",kind:R.k,o,pay:R.pay,cid:R.cid,cname:R.cname,memo:R.memo,rid:R.rid});R.busy=false;if(!r.ok){$("sd").disabled=false;return alertBox(r.err)}
-  R.last[R.k]=R.o;$("ft").hidden=true;$("mn").innerHTML='<div class="box ok">✅ 大川さんに頼みました'+(r.id?'（'+esc(r.id)+'）':'')+'</div>'+(r.text?'<div class="box"><div class="s">'+esc(r.text)+'</div></div>':'')+'<div class="hint">取れたら、このトークに便名・時間などが届きます</div><button class="send2b" onclick="rTop()">大川さんへ に戻る</button>'+(liff.isInClient&&liff.isInClient()?'<button class="send" style="margin-top:10px" onclick="liff.closeWindow()">閉じる</button>':'');
+  R.last[R.k]=R.o;$("ft").hidden=true;$("mn").innerHTML='<div class="box ok">✅ 頼みました'+(r.id?'（'+esc(r.id)+'）':'')+'</div>'+(r.text?'<div class="box"><div class="s">'+esc(r.text)+'</div></div>':'')+'<button class="send2b" onclick="rTop()">戻る</button>'+(liff.isInClient&&liff.isInClient()?'<button class="send" style="margin-top:10px" onclick="liff.closeWindow()">閉じる</button>':'');
  }catch(e){R.busy=false;$("sd").disabled=false;alertBox("送れませんでした："+e.message)}
 }
+/* 乗る人の情報（台帳は大川さんだけのシート。入れた番号はここには出さない） */
+let PX={name:"",b64:"",mime:""};
+function pForm(name){
+ PX={name,b64:"",mime:""};const x=rPaxOf(name)||{};
+ $("hd").textContent=name;$("ft").hidden=false;
+ const st=(on,t)=>'<span class="bdg'+(on?" ok":"")+'">'+(on?"✓ ":"")+t+'</span>';
+ $("mn").innerHTML='<div class="bk" onclick="rDraw()">← 戻る</div><div class="fm"><div class="row2">'+st(x.roma,"ローマ字")+st(x.jmb,"JMB")+st(x.pp,"パスポート")+st(x.photo,"写真")+'</div><div class="hint" style="text-align:left;margin:6px 0 0">入れた番号は大川さんだけの台帳に入り、ここには出ません。分かるところだけでOK</div></div>'+
+ '<div class="fm"><div class="row2"><input type="text" id="p_l" placeholder="姓（ローマ字）"><input type="text" id="p_f" placeholder="名（ローマ字）"></div><div class="lg"><span class="lb2">生年月日</span><input id="p_b" type="date"></div><input type="text" id="p_j" inputmode="numeric" placeholder="JMB 番号"><div class="row2" style="margin-top:8px"><input type="text" id="p_p" placeholder="パスポート番号"><input type="text" id="p_n" placeholder="国籍"></div><div class="lg"><span class="lb2">期限</span><input id="p_e" type="date"></div></div>'+
+ '<div class="fm"><label class="send2b" style="text-align:center;cursor:pointer">📷 パスポートの写真<input id="p_ph" type="file" accept="image/*" hidden></label><div id="p_pv" class="hint"></div></div>';
+ $("p_ph").onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=await xShrink(f);PX.b64=d.split(",")[1];PX.mime="image/jpeg";$("p_pv").textContent="✓ 写真を付けました"}catch(er){alertBox("写真を読めませんでした")}};
+ $("sd").disabled=false;$("sd").textContent="台帳に入れる";$("hn").textContent="";$("sd").onclick=pSave;
+}
+async function pSave(){
+ const v=id=>($(id).value||"").trim();
+ const b={op:"paxsave",name:PX.name,last:v("p_l"),first:v("p_f"),birth:v("p_b"),jmb:v("p_j"),pp:v("p_p"),nat:v("p_n"),exp:v("p_e"),b64:PX.b64,mime:PX.mime};
+ if(!Object.keys(b).some(k=>!/^(op|name|mime)$/.test(k)&&b[k]))return alertBox("どれか1つ入れてください");
+ $("sd").disabled=true;
+ try{const r=await api(b);if(!r.ok){$("sd").disabled=false;return alertBox(r.err)}const p=await api({op:"paxlist"});if(p.ok)R.pax=p.list;rDraw()}catch(e){$("sd").disabled=false;alertBox("入れられませんでした："+e.message)}
+}
+
+/* ---------- 提出する（🎬 動画の確認・📝 企画・構成案・🔗 投稿した） ---------- */
+let U={k:"",cs:[],turn:[],list:[],who:"",test:false,cid:"",cname:"",q:"",o:{},memo:"",fix:null,busy:false,rid:"",shots:[],loaded:false};
+const UK={mov:"🎬 動画の確認",plan:"📝 企画・構成案",post:"🔗 投稿した"};
+async function uLoad(){const r=await api({op:"subcases"});if(!r.ok)throw new Error(r.err);U.cs=r.cases||[];U.turn=r.turn||[];U.list=r.list||[];U.who=r.who;U.test=r.test;U.loaded=true}
+async function uSub(){
+ $("hd").textContent="提出する";$("ft").hidden=true;$("mn").innerHTML='<div class="msg"><div class="spin"></div></div>';
+ try{await uLoad()}catch(e){return err(e.message)}
+ const it=(ic,t,id)=>'<div class="mi" id="'+id+'"><div class="ic">'+ic+'</div><div class="tx"><b>'+t+'</b></div></div>';
+ let h=(U.test?'<div class="tst">【テスト】</div>':'');
+ if(U.turn.length)h+='<div class="dtw">出す番（大川さんから「直して」）</div>'+U.turn.map((x,i)=>'<a class="ak" data-t="'+i+'"><b>'+esc(x.kind.split(" ")[0])+' '+esc(x.name||x.cid)+' '+esc(x.round||"")+'</b><span>'+esc(String(x.reply||"直して").split("\n")[0].slice(0,40))+'</span></a>').join("");
+ h+=it("🎬","動画の確認","u_mov")+it("📝","企画・構成案","u_plan")+it("🔗","投稿した・インサイト","u_post")+it("🧾","経費（レシート）","u_exp");
+ h+='<div class="dtw">出したもの</div><div class="lst">'+(U.list.length?U.list.map(x=>'<div class="box" style="padding:9px 11px;margin-bottom:6px"><span class="st">'+esc(x.st)+'</span><b>'+esc(x.kind)+'</b> '+esc(x.name||x.cid)+' '+esc(x.round||"")+(U.who==="大川"&&x.who!=="大川"?' <span class="tg">'+esc(x.who)+'</span>':'')+(x.reply&&x.reply!=="OK"?'<div style="white-space:pre-wrap;color:#555;font-size:12px;margin-top:3px">'+esc(x.reply)+'</div>':'')+'</div>').join(""):'<div class="hint" style="text-align:left">まだありません</div>')+'</div>'+mClose();
+ $("mn").innerHTML=h;
+ ["mov","plan","post"].forEach(k=>$("u_"+k).onclick=()=>uForm(k,null));
+ $("u_exp").onclick=()=>xPick();
+ document.querySelectorAll("[data-t]").forEach(a=>a.onclick=()=>uForm(U.turn[+a.dataset.t].k,U.turn[+a.dataset.t]));
+}
+function uForm(k,fix){
+ U.k=k;U.fix=fix||null;U.rid=xRid();U.busy=false;U.q="";U.memo="";U.memoOpen=false;U.shots=[];
+ U.cid=fix?fix.cid:"";U.cname=fix?(fix.name||fix.cid):"";
+ U.o=k==="mov"?{stage:fix?"修正稿":"初稿",urls:[""],tz:"日本時間",rush:"ふつう"}:k==="plan"?{urls:[""],text:""}:{urls:[""],ins:""};
+ uDraw();
+}
+function uIn(name,val,type,ph){return '<input type="'+(type||"text")+'" data-u="'+name+'" value="'+esc(val||"")+'" placeholder="'+esc(ph||"")+'">'}
+function uSel(name,opts,cur){return '<select data-u="'+name+'">'+opts.map(o=>'<option'+(String(cur||"")===o?" selected":"")+'>'+esc(o)+'</option>').join("")+'</select>'}
+function uTa(name,val,ph,rows){return '<textarea data-u="'+name+'" rows="'+(rows||3)+'" placeholder="'+esc(ph||"")+'" style="margin-top:6px">'+esc(val||"")+'</textarea>'}
+function uKeep(){document.querySelectorAll("[data-u]").forEach(i=>{const p=i.dataset.u;if(i.type==="checkbox")return;rSet(U.o,p,i.value)});const m=$("u_memo");if(m)U.memo=m.value}
+function uDraw(){
+ const k=U.k,o=U.o;$("hd").textContent=UK[k];
+ let h=(U.test?'<div class="tst">【テスト】</div>':'')+'<div class="bk" onclick="uSub()">← 戻る</div>';
+ if(U.fix)h+='<div class="ans no"><b>大川さんから（'+esc(U.fix.round||"")+'）</b>\n'+esc(U.fix.reply||"直して")+'</div>';
+ h+='<div class="fm">'+(U.cid||U.cname?'<div class="pick">📁 '+esc(U.cname||U.cid)+' <span id="u_cx">✕</span></div>':'<input id="u_q" type="search" placeholder="🔍 件を検索" value="'+esc(U.q)+'"><div id="u_qs"></div>')+'</div>';
+ const urls=(lab,ph)=>(o.urls||[""]).map((u,i)=>'<div class="row2">'+uIn("urls."+i,u,"url",ph+(o.urls.length>1?"（"+(i+1)+"）":""))+(o.urls.length>1?'<span class="x" data-ux="'+i+'">✕</span>':'')+'</div>').join("")+'<div class="bk" id="u_add" style="margin:6px 0 0">＋ '+lab+'</div>';
+ if(k==="mov"){
+  h+='<div class="fm">'+uSel("stage",["初稿","修正稿","完成"],o.stage)+'<div class="lb">動画（ドライブなどのリンク）</div>'+urls("もう1本","動画の URL")+'</div>';
+  h+='<div class="fm"><div class="lb" style="margin-top:0">投稿文（キャプション）</div>'+uTa("caption",o.caption,"なければ空でOK",3)+uIn("thumb",o.thumb,"url","サムネの URL（あれば）")+'</div>';
+  h+='<div class="fm"><div class="lb" style="margin-top:0">投稿したい日時</div><div class="row2">'+uIn("when",o.when,"datetime-local")+'</div>'+uSel("tz",["日本時間","いる場所の時間"],o.tz)+uSel("rush",["ふつう","今日中","1時間以内"],o.rush)+'</div>';
+ }else if(k==="plan"){
+  h+='<div class="fm"><div class="lb" style="margin-top:0">企画・構成案（貼りつけ）</div>'+uTa("text",o.text,"企画の文",6)+'<div class="lb">ファイル・リンク</div>'+urls("もう1つ","URL（ドライブ・ドキュメントなど）")+'</div>';
+ }else{
+  h+='<div class="fm"><div class="lb" style="margin-top:0">投稿の URL（媒体ごと）</div>'+urls("もう1つ","投稿の URL")+'<label class="ck"><input type="checkbox" id="u_sc"'+(o.schedOn?" checked":"")+'> 予約投稿</label>'+(o.schedOn?'<div class="row2">'+uIn("sched",o.sched,"datetime-local")+'</div>':'')+'</div>';
+  h+='<div class="fm"><div class="lb" style="margin-top:0">インサイト（あれば）</div>'+uTa("ins",o.ins,"再生・いいね・保存など",3)+'<label class="send2b" style="text-align:center;cursor:pointer;margin-top:8px">📷 スクショ'+(U.shots.length?'（'+U.shots.length+'枚）':'')+'<input id="u_ph" type="file" accept="image/*" multiple hidden></label></div>';
+ }
+ h+='<div class="fm">'+(U.memoOpen||U.memo||k==="plan"?'<textarea id="u_memo" placeholder="大川さんへのひとこと">'+esc(U.memo)+'</textarea>':'<div class="bk" id="u_mo" style="margin:0">＋ 大川さんへのひとこと</div>')+'</div>';
+ $("mn").innerHTML=h;
+ const re=()=>{uKeep();uDraw()};
+ if($("u_q")){$("u_q").oninput=e=>{U.q=e.target.value;uSugC()};$("u_q").onfocus=uSugC}
+ if($("u_cx"))$("u_cx").onclick=()=>{U.cid="";U.cname="";re()};
+ if($("u_add"))$("u_add").onclick=()=>{uKeep();if(o.urls.length<10)o.urls.push("");uDraw()};
+ document.querySelectorAll("[data-ux]").forEach(b=>b.onclick=()=>{uKeep();o.urls.splice(+b.dataset.ux,1);uDraw()});
+ if($("u_sc"))$("u_sc").onchange=e=>{uKeep();o.schedOn=e.target.checked;uDraw()};
+ if($("u_mo"))$("u_mo").onclick=()=>{U.memoOpen=true;re()};
+ if($("u_ph"))$("u_ph").onchange=async e=>{uKeep();const fs=Array.from(e.target.files||[]).slice(0,6-U.shots.length);for(const f of fs){try{const d=await xShrink(f);U.shots.push({b64:d.split(",")[1],mime:"image/jpeg"})}catch(er){alertBox("写真を読めませんでした")}}uDraw()};
+ $("ft").hidden=false;$("sd").disabled=false;$("sd").textContent="大川さんに出す";$("hn").textContent="";$("sd").onclick=uSend;
+}
+/* 件の検索（手配の rSugC と同じやり方。候補だけ描き直す） */
+function uSugC(){const box=$("u_qs");if(!box)return;const q=U.q.toLowerCase();const hit=(q?U.cs.filter(c=>(c.name+c.id).toLowerCase().includes(q)):U.cs).slice(0,6);
+ box.innerHTML=hit.length?'<div class="sug">'+hit.map(c=>'<div data-uc="'+esc(c.id)+'">'+esc(c.name)+'<span>'+esc(c.next||"")+'</span></div>').join("")+'</div>':(q?'<div class="sug"><div data-un="1">＋「'+esc(U.q)+'」で出す</div></div>':'');
+ box.querySelectorAll("[data-uc]").forEach(b=>b.onclick=()=>{uKeep();U.cid=b.dataset.uc;const c=U.cs.find(x=>x.id===U.cid);U.cname=c?c.name:"";U.q="";uDraw()});
+ box.querySelectorAll("[data-un]").forEach(b=>b.onclick=()=>{uKeep();U.cid="";U.cname=U.q.trim().slice(0,40);U.q="";uDraw()})}
+async function uSend(){
+ uKeep();if(U.busy)return;const k=U.k,o=JSON.parse(JSON.stringify(U.o));
+ if(!U.cid&&!U.cname)return alertBox("どの件かを選んでください");
+ const urls=(o.urls||[]).map(s=>String(s||"").trim()).filter(Boolean);
+ if(urls.some(u=>!/^https?:\/\//.test(u)))return alertBox("URL は http から入れてください");
+ if(k==="mov"&&!urls.length)return alertBox("動画の URL を入れてください");
+ if(k==="plan"&&!urls.length&&!String(o.text||"").trim())return alertBox("企画の文かリンクを入れてください");
+ if(k==="post"&&!urls.length&&!String(o.ins||"").trim()&&!U.shots.length)return alertBox("投稿の URL か、インサイトを入れてください");
+ o.urls=urls;if(k==="post"){if(!o.schedOn)delete o.sched;delete o.schedOn;o.shots=U.shots}
+ U.busy=true;$("sd").disabled=true;$("sd").textContent="送っています…";
+ try{const r=await api({op:"subsave",kind:k,o,cid:U.cid,cname:U.cname,memo:U.memo,rid:U.rid});U.busy=false;
+  if(!r.ok){$("sd").disabled=false;$("sd").textContent="大川さんに出す";return alertBox(r.err)}
+  $("ft").hidden=true;$("mn").innerHTML='<div class="box ok">✅ 大川さんに出しました'+(r.id?'（'+esc(r.id)+(r.round?'・'+esc(r.round):'')+'）':'')+'</div><div class="hint">大川さんが［OK］か［直して］を返すと、LINE に届きます</div><button class="send2b" style="margin-top:12px" onclick="uSub()">戻る</button>'+(liff.isInClient&&liff.isInClient()?'<button class="send" style="margin-top:10px" onclick="liff.closeWindow()">閉じる</button>':'');
+ }catch(e){U.busy=false;$("sd").disabled=false;$("sd").textContent="大川さんに出す";alertBox("送れませんでした："+e.message)}
+}
+
 (async()=>{
  try{
   await liff.init({liffId:LIFF_ID,withLoginOnExternalBrowser:true});
@@ -366,7 +491,7 @@ async function rSend(){
   if(V==="ask"){aQ=qid;return mStart(V)}
   if(V==="exp")return xPick();
   if(V==="dt")return tStart(P.get("id")||"");
-  if(V==="sub")return sSub();
+  if(V==="sub")return uSub(); // 提出する（3つを足した入口。前の sSub は残す）
   if(V==="sch")return sSch();
   if(V==="to")return rTop();
   if(!qid&&(V==="todo"||V==="list"))return mStart(V);
