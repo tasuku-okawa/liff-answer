@@ -241,17 +241,17 @@ async function tStart(id){
 }
 function tDraw(){
  $("hd").textContent=T.name;
- let h='<div class="box">'+(T.test?'<div class="tst">【テスト・村井さんに見える】</div>':'')+'<div class="s">先方の希望 <b>'+esc(T.day+(T.t?" "+T.t:""))+'</b> は出られない、ですね。<br>代わりに出られる日を押してください。<br>押すたびに <b>終日 → 午前 → 午後 → なし</b></div>'+(T.calOk?'':'<div class="hint" style="text-align:left">カレンダーは読めませんでした（アプリの予定だけ）</div>')+'</div>';
+ let h='<div class="box">'+(T.test?'<div class="tst">【テスト・村井さんに見える】</div>':'')+(T.mode==="cand"?'<div class="s">'+(T.who2?esc(T.who2)+'から、':'')+'候補日のお願いです。<br>期間 <b>'+esc(T.range)+'</b>'+(T.t?'<br>'+esc(T.t):'')+'<br>出られる日を押してください。<br>押すたびに <b>終日 → 午前 → 午後 → なし</b></div>':'<div class="s">先方の希望 <b>'+esc(T.day+(T.t?" "+T.t:""))+'</b> は出られない、ですね。<br>代わりに出られる日を押してください。<br>押すたびに <b>終日 → 午前 → 午後 → なし</b></div>')+(T.calOk?'':'<div class="hint" style="text-align:left">カレンダーは読めませんでした（アプリの予定だけ）</div>')+'</div>';
  let wk="";
  T.days.forEach(x=>{
   const m=x.d.slice(0,7);if(m!==wk){wk=m;h+='<div class="dtw">'+(+x.d.slice(5,7))+'月</div>'}
-  const ask=x.d===T.d,st=TP[x.d]||0,cl=x.wd==="土"?" sat":x.wd==="日"?" sun":"";
+  const ask=T.mode!=="cand"&&x.d===T.d,st=TP[x.d]||0,cl=x.wd==="土"?" sat":x.wd==="日"?" sun":"";
   const its=x.items.length?x.items.map(i=>'<div><span class="tm">'+esc(i.t||"終日")+'</span>'+(i.tag?'［'+esc(i.tag)+'］':'')+esc(i.what||"予定")+'</div>').join(""):'<div class="no">予定なし</div>';
   h+='<div class="dtr'+(ask?" ask":x.allDay?" gray":"")+'" data-d="'+x.d+'"><div class="dd'+cl+'">'+x.md+'（'+x.wd+'）</div><div class="it">'+(ask?'<div>先方の希望の日</div>':'')+its+'</div><div class="pk'+(st===1?" on":st===2?" am":st===3?" pm":"")+'">'+(ask?"—":st?TS[st]:"＋")+'</div></div>';
  });
- h+='<button class="closeb" id="tnone">代わりの日はない</button>';
+ h+='<button class="closeb" id="tnone">'+(T.mode==="cand"?"出られる日はない":"代わりの日はない")+'</button>';
  $("mn").innerHTML=h;
- document.querySelectorAll(".dtr").forEach(el=>{const d=el.dataset.d;if(d===T.d)return;el.onclick=()=>{TP[d]=((TP[d]||0)+1)%4;if(!TP[d])delete TP[d];tDraw();window.scrollTo(0,window.scrollY)}});
+ document.querySelectorAll(".dtr").forEach(el=>{const d=el.dataset.d;if(T.mode!=="cand"&&d===T.d)return;el.onclick=()=>{TP[d]=((TP[d]||0)+1)%4;if(!TP[d])delete TP[d];tDraw();window.scrollTo(0,window.scrollY)}});
  $("tnone").onclick=()=>tSend(true);
  const n=Object.keys(TP).length;$("ft").hidden=false;$("sd").disabled=!n;$("sd").textContent=n?"この"+n+"日で送る":"出られる日を押してください";
  $("hn").textContent=n?Object.keys(TP).sort().map(d=>{const x=T.days.find(y=>y.d===d);return x.md+"（"+x.wd+"）"+(TP[d]>1?TS[TP[d]]:"")}).join("・"):"";
