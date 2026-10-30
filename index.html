@@ -43,6 +43,7 @@ label.send,label.send2{display:block}#xs{margin-bottom:10px}
 button.closeb{display:block;width:100%;margin-top:18px;border:0;background:none;color:#666;font-size:14px;padding:10px;text-decoration:underline;text-underline-offset:3px}
 .addb{display:block;text-align:center;border:1.5px dashed #b9c2bd;border-radius:12px;padding:10px;color:#137333;font-weight:700;font-size:13.5px;margin-bottom:12px;cursor:pointer;background:#fff}
 button.send2b{display:block;width:100%;border:1.5px solid var(--g);border-radius:12px;padding:12px;font-size:15px;font-weight:700;background:#fff;color:#137333}
+.dtr{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer;user-select:none}.dtr.gray{background:#eef0f3}.dtr.ask{background:#f1f3f4;color:#999;cursor:default}.dtr .dd{width:78px;flex:none;font-weight:700;font-size:14px}.dtr .dd.sat{color:#1a56c4}.dtr .dd.sun{color:#c5221f}.dtr .it{flex:1;font-size:12px;color:#444;line-height:1.55}.dtr .it .tm{color:#888;margin-right:6px}.dtr .it .no{color:#aaa}.dtr .pk{flex:none;min-width:48px;text-align:center;border:1.5px solid var(--bd);border-radius:999px;padding:5px 8px;font-size:13px;font-weight:700;color:#bbb}.dtr .pk.on{background:var(--g);border-color:var(--g);color:#fff}.dtr .pk.am,.dtr .pk.pm{background:#e7f8ee;border-color:var(--g);color:#137333}.dtw{font-size:12px;color:#666;margin:14px 2px 6px;font-weight:700}.tst{color:#D93025;font-weight:700;font-size:12px;margin-bottom:4px}
 </style></head><body>
 <header id="hd">読み込み中…</header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -231,12 +232,46 @@ async function mStart(v){
  const r=await api({op:v});if(!r.ok)return err(r.err);M=r;
  if(v==="todo"){$("sd").onclick=mSend;mTodo()}else mList();
 }
+
+/* k14：日程の確認［だめ］の先。1か月の予定を見て、出られる日を押す（終日◯→午前→午後→なし） */
+let T=null,TP={},tBusy=false;
+const TS=["","終日","午前","午後"];
+async function tStart(id){
+ const r=await api({op:"dtcal",id});if(!r.ok)return err(r.err);T=r;tDraw();
+}
+function tDraw(){
+ $("hd").textContent=T.name;
+ let h='<div class="box">'+(T.test?'<div class="tst">【テスト・村井さんに見える】</div>':'')+'<div class="s">先方の希望 <b>'+esc(T.day+(T.t?" "+T.t:""))+'</b> は出られない、ですね。<br>代わりに出られる日を押してください。<br>押すたびに <b>終日 → 午前 → 午後 → なし</b></div>'+(T.calOk?'':'<div class="hint" style="text-align:left">カレンダーは読めませんでした（アプリの予定だけ）</div>')+'</div>';
+ let wk="";
+ T.days.forEach(x=>{
+  const m=x.d.slice(0,7);if(m!==wk){wk=m;h+='<div class="dtw">'+(+x.d.slice(5,7))+'月</div>'}
+  const ask=x.d===T.d,st=TP[x.d]||0,cl=x.wd==="土"?" sat":x.wd==="日"?" sun":"";
+  const its=x.items.length?x.items.map(i=>'<div><span class="tm">'+esc(i.t||"終日")+'</span>'+(i.tag?'［'+esc(i.tag)+'］':'')+esc(i.what||"予定")+'</div>').join(""):'<div class="no">予定なし</div>';
+  h+='<div class="dtr'+(ask?" ask":x.allDay?" gray":"")+'" data-d="'+x.d+'"><div class="dd'+cl+'">'+x.md+'（'+x.wd+'）</div><div class="it">'+(ask?'<div>先方の希望の日</div>':'')+its+'</div><div class="pk'+(st===1?" on":st===2?" am":st===3?" pm":"")+'">'+(ask?"—":st?TS[st]:"＋")+'</div></div>';
+ });
+ h+='<button class="closeb" id="tnone">代わりの日はない</button>';
+ $("mn").innerHTML=h;
+ document.querySelectorAll(".dtr").forEach(el=>{const d=el.dataset.d;if(d===T.d)return;el.onclick=()=>{TP[d]=((TP[d]||0)+1)%4;if(!TP[d])delete TP[d];tDraw();window.scrollTo(0,window.scrollY)}});
+ $("tnone").onclick=()=>tSend(true);
+ const n=Object.keys(TP).length;$("ft").hidden=false;$("sd").disabled=!n;$("sd").textContent=n?"この"+n+"日で送る":"出られる日を押してください";
+ $("hn").textContent=n?Object.keys(TP).sort().map(d=>{const x=T.days.find(y=>y.d===d);return x.md+"（"+x.wd+"）"+(TP[d]>1?TS[TP[d]]:"")}).join("・"):"";
+ $("sd").onclick=()=>tSend(false);
+}
+async function tSend(none){
+ if(tBusy)return;tBusy=true;$("sd").disabled=true;
+ try{
+  const picks=Object.keys(TP).map(d=>({d,s:TP[d]>1?TS[TP[d]]:""}));
+  const r=await api({op:"dtpick",id:T.id,picks,none});tBusy=false;if(!r.ok){$("sd").disabled=false;return alertBox(r.err)}
+  $("ft").hidden=true;$("mn").innerHTML='<div class="box ok">'+(T.test?'<div class="tst">【テスト・村井さんに見える】</div>':'')+'✅ '+esc(r.again?"もう送っています：":"大川さんに送りました：")+'<br><b>'+esc(r.text)+'</b></div>'+(liff.isInClient&&liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">閉じる</button>':'');
+ }catch(e){tBusy=false;$("sd").disabled=false;alertBox("送れませんでした："+e.message)}
+}
 (async()=>{
  try{
   await liff.init({liffId:LIFF_ID,withLoginOnExternalBrowser:true});
   const P=new URLSearchParams(location.search);qid=P.get("q")||"";const V=P.get("v")||"";
   if(V==="ask"){aQ=qid;return mStart(V)}
   if(V==="exp")return xPick();
+  if(V==="dt")return tStart(P.get("id")||"");
   if(!qid&&(V==="todo"||V==="list"))return mStart(V);
   if(!qid)return err("件の番号がありません（カードの［答える］から開いてください）");
   const r=await api({op:"load"});if(!r.ok)return err(r.err);
