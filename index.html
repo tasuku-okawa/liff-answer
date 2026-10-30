@@ -198,7 +198,7 @@ function mAsk(){
  document.querySelectorAll("[data-ap]").forEach(b=>b.onclick=()=>{aPick=b.dataset.ap;aTxt=ta.value;mAsk()});
  $("as").onclick=async()=>{const t=ta.value.trim();if(!t){ta.focus();return}if(aBusy)return;aBusy=true;$("as").disabled=true;$("as").textContent="送っています…";
   try{const r=await api({op:"askq",q:cx?cx.qid:"",text:t});if(!r.ok){aBusy=false;return err(r.err)}aTxt="";
-   $("mn").innerHTML='<div class="box ok">大川さんに送りました</div><div class="msg">'+(r.name?esc(r.name)+" の件として届きました。":"")+'返事はこのトークに来ます</div>'+mClose()}catch(e){err("送れませんでした："+e.message)}aBusy=false};
+   $("mn").innerHTML=(r.ai&&r.ai.src?'<div class="box ok">🤖 大川（AI）</div><div class="ans no" style="margin-top:8px">'+(r.name?'<b>'+esc(r.name)+'</b>\n':"")+esc(r.ai.text)+'<span class="sm">出どころ：'+esc(r.ai.src)+'</span></div><div class="msg">トークにも届いています。ちがいそうなら、トークの［本物の大川さんに聞く］を押してください</div>':r.ai?'<div class="box ok">大川さんに聞きます</div><div class="msg">'+(r.name?esc(r.name)+" の件として届きました。":"")+'決めることなので、大川さんが答えます。返事はこのトークに来ます</div>':'<div class="box ok">大川さんに送りました</div><div class="msg">'+(r.name?esc(r.name)+" の件として届きました。":"")+'返事はこのトークに来ます</div>')+mClose()}catch(e){err("送れませんでした："+e.message)}aBusy=false};
 }
 let X={files:[],thumbs:[],cs:[],cid:"",busy:false,live:false,who:""};
 function xRid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
@@ -484,6 +484,121 @@ async function uSend(){
  }catch(e){U.busy=false;$("sd").disabled=false;$("sd").textContent="大川さんに出す";alertBox("送れませんでした："+e.message)}
 }
 
+/* ---------- k44b：案件一覧（v=list）に 探す窓と件の詳しい画面（読むだけ）。前の mList は残す ---------- */
+let K={cases:{},q2c:{},q:"",d:null};
+(function(){const s=document.createElement("style");s.textContent='.kv{display:grid;grid-template-columns:7.4em 1fr;gap:4px 10px;font-size:13px;line-height:1.55}.kv b{color:#666;font-weight:400}.kv .un{color:#aaa}.kd{font-weight:700;font-size:12.5px;margin:10px 0 4px}.ki{font-size:13px;line-height:1.55;padding:6px 0;border-top:1px solid #f0f1f3}.ki:first-child{border-top:0}.ki a{color:#0a66c2;word-break:break-all}.ki details summary{font-weight:400;color:#0a66c2;font-size:12px}.ki .s{font-size:12px;margin-top:4px}.kn{font-size:13px;line-height:1.6}.row.ko{cursor:pointer}.row .op{float:right;color:#999;font-weight:400}.knote{font-size:12px;color:#666;margin:0 2px 8px}';document.head.appendChild(s)})();
+async function kStart(){
+ $("hd").textContent="大川からの質問一覧";$("ft").hidden=true;$("mn").innerHTML='<div class="msg"><div class="spin"></div></div>';
+ try{const [r,c]=await Promise.all([api({op:"list"}),api({op:"kcases"}).catch(()=>({ok:false}))]);
+ if(!r.ok)return err(r.err);M=r;if(c&&c.ok){K.cases=c.cases||{};K.q2c=c.q2c||{}}
+ kList()}catch(e){err("開けませんでした："+e.message)}
+}
+function kCid(x){return x.cid||K.q2c[x.qid]||""}
+function kInfo(x){return K.cases[kCid(x)]||{}}
+function kList(){
+ const L=M.list||[];$("hd").textContent="大川からの質問一覧";$("ft").hidden=true;
+ const cnt=k=>k==="all"?L.length:L.filter(x=>x.label===k).length;
+ if(!mLf)mLf=cnt("あなたの番")?"あなたの番":"all";
+ const F=[["あなたの番","あなたの番"],["待ち","待ち"],["進行中","進行中"],["完了","完了"],["all","全部"]];
+ $("mn").innerHTML='<input id="k_q" class="inp" type="search" placeholder="🔍 件・会社・人で探す" value="'+esc(K.q)+'"><div class="filt" id="k_f">'+F.map(([k,v])=>'<button data-f="'+k+'" class="'+(mLf===k?"on":"")+'">'+v+'（'+cnt(k)+'）</button>').join("")+'</div><div id="k_rows"></div>'+mClose();
+ document.querySelectorAll("#k_f button").forEach(b=>b.onclick=()=>{mLf=b.dataset.f;K.q="";kList()});
+ $("k_q").oninput=e=>{K.q=e.target.value;kRows()};
+ kRows();
+}
+function kRows(){
+ const L=M.list||[],q=K.q.trim().toLowerCase(),PN={"江藤":"江藤 yuu","ウンパ":"村井 ウンパ","大川":"大川 tas"};
+ const hit=x=>{const i=kInfo(x);const s=[x.head,x.qid,kCid(x),x.who2,i.key||""].concat((x.state||[]).map(y=>y.q+" "+(PN[y.to]||y.to||""))).join(" ").toLowerCase();return q.split(/\s+/).every(w=>s.indexOf(w)>=0)};
+ const rows=q?L.filter(hit):L.filter(x=>mLf==="all"||x.label===mLf);
+ document.querySelectorAll("#k_f button").forEach(b=>b.classList.toggle("on",!q&&mLf===b.dataset.f));
+ const cls={"あなたの番":"l-me","待ち":"l-wait","進行中":"l-go","完了":"l-done"};
+ $("k_rows").innerHTML=(q?'<div class="knote">全部から探しています（'+rows.length+'件）</div>':'')+(rows.length?rows.map(x=>{const i=kInfo(x),st=i.stage||x.stage,nx=i.next||x.next,id=L.indexOf(x);
+  return '<div class="row ko" data-o="'+id+'"><div class="rt"><span class="op">開く ›</span><span class="lab '+cls[x.label]+'">'+esc(x.label)+'</span>'+esc(x.head)+(st?' <span class="stg">'+esc(st)+'</span>':'')+'</div>'
+  +(nx||x.status?'<div class="nx">'+esc([x.status,x.who2,nx].filter(Boolean).join("・"))+'</div>':'')+'<div class="rm">'
+  +(x.state||[]).map(y=>(y.a.length?"✅ ":"⬜ ")+esc(y.q)+(y.a.length?"："+esc(y.a.map(a=>a.v+"（"+a.who+"）").join("／")):(y.to?"（"+esc(AT[y.to]||y.to)+"）":""))).join("\n")+'</div>'
+  +(x.label==="あなたの番"?(x.mine1?'<button data-q="'+esc(x.qid)+'">答える（'+x.open+'問）</button>':'<div class="rm" style="color:#888">グループのカードの［答える］から答えてください</div>'):"")+'</div>'}).join(""):'<div class="msg">ありません</div>');
+ document.querySelectorAll("#k_rows .row button[data-q]").forEach(b=>b.onclick=e=>{e.stopPropagation();location.href=location.pathname+"?q="+encodeURIComponent(b.dataset.q)});
+ document.querySelectorAll("#k_rows .row[data-o]").forEach(el=>el.onclick=()=>{const x=L[+el.dataset.o];if(x)kOpen(kCid(x),x.qid||"")});
+}
+async function kOpen(cid,q){
+ $("ft").hidden=true;$("mn").innerHTML='<div class="msg"><div class="spin"></div></div>';window.scrollTo(0,0);
+ try{const r=await api({op:"kcase",c:cid,q:q});if(!r.ok){$("mn").innerHTML='<div class="bk" id="k_bk">← 一覧</div><div class="msg">'+esc(r.err)+'</div>';$("k_bk").onclick=kList;return}K.d=r;kDraw()}catch(e){err("開けませんでした："+e.message)}
+}
+function kKv(rows){return '<div class="kv">'+(rows||[]).map(p=>'<b>'+esc(p[0])+'</b><span'+(p[1]==="未定"?' class="un"':'')+'>'+esc(p[1])+'</span>').join("")+'</div>'}
+function kLinky(s){return esc(s).replace(/https?:\/\/[^\s<"]+/g,u=>'<a href="'+u+'" target="_blank">'+u+'</a>')}
+function kDraw(){
+ const d=K.d,box=(t,b,st)=>'<div class="box"'+(st?' style="'+st+'"':'')+'><div class="t">'+t+'</div>'+b+'</div>';
+ $("hd").textContent=d.name||d.cid||"件";
+ let h='<div class="bk" id="k_bk">← 一覧</div>';
+ h+=box("いま",'<div class="kn">'+(d.now.length?d.now.map(n=>'<b>'+esc(n.who)+'の番</b>：'+esc(n.what)+(n.by?'（'+esc(n.by)+'）':'')).join("<br>"):'<span style="color:#aaa">未定</span>')+'</div><div style="margin-top:6px"><span class="stg">'+esc(d.stage)+'</span> <span class="cnt">'+esc([d.status,d.who2,d.due?"回答期限 "+d.due:""].filter(Boolean).join("・"))+'</span></div>',"border-color:#f3b8b4;background:#fff7f6");
+ (d.asks||[]).forEach(a=>{const sm=mSum(a.summary);h+='<div class="box">'+(sm?'<details><summary>案件の概要（'+esc(a.head)+'）</summary><div class="s" style="margin-top:6px">'+sm+'</div></details>':'<div class="t">'+esc(a.head)+'</div>')
+  +'<div class="rm" style="font-size:12px;color:#555;margin-top:6px;white-space:pre-wrap">'+a.state.map(y=>(y.a.length?"✅ ":"⬜ ")+esc(y.q)+(y.a.length?"："+esc(y.a.map(z=>z.v+"（"+z.who+"）").join("／")):(y.to?"（"+esc(AT[y.to]||y.to)+"）":""))).join("\n")+'</div>'
+  +(a.open&&a.mine1&&!a.done?'<button class="send2b" style="margin-top:8px" data-q="'+esc(a.qid)+'">答える（'+a.open+'問）</button>':'')+'</div>'});
+ h+=box("やること",kKv(d.todo));
+ h+=box("いつ・どこ",kKv(d.when)+(d.genba.length?d.genba.map(g=>'<div class="kd">'+esc(g.day)+(g.kind&&g.kind!=="確定"?' <span class="tg">'+esc(g.kind)+'</span>':'')+'</div>'+kKv(g.rows)).join(""):'<div style="height:6px"></div>'+kKv(d.where)));
+ h+=box("先方のねらい・入れること",kKv(d.aim));
+ h+=box("お金",kKv(d.money));
+ h+=box("決まりごと",kKv(d.rules));
+ h+=box("原文・資料",d.src.length?d.src.map(s=>'<div class="ki">'+esc(s.ic)+' <b>'+esc(s.k)+'</b> '+kLinky(s.v)+(s.more?'<details><summary>原文</summary><div class="s">'+kLinky(s.more)+'</div></details>':'')+'</div>').join(""):'<span style="color:#aaa;font-size:13px">未定</span>');
+ h+=box("流れ",d.flow.length?d.flow.map(f=>'<div class="ki"><b>'+esc(f.at)+'</b> '+esc(f.kind)+' '+esc(f.round)+'（'+esc(f.who)+'）<span class="tg" style="margin-left:4px">'+esc(f.st)+'</span>'+(f.reply&&f.reply!=="OK"?'<div class="s" style="color:#555">'+esc(f.reply)+'</div>':'')+'</div>').join(""):'<span style="color:#aaa;font-size:13px">まだありません</span>');
+ if(d.link)h+='<a class="lk" href="'+esc(d.link)+'" target="_blank">🔗 この案件の詳細・履歴</a>';
+ h+='<button class="send2b" style="margin-top:12px" id="k_ask">❓ この件で質問</button><button class="send2b" style="margin-top:8px" id="k_sub">📤 この件で提出する</button>'+mClose();
+ $("mn").innerHTML=h;
+ $("k_bk").onclick=()=>{kList();window.scrollTo(0,0)};
+ document.querySelectorAll("#mn button[data-q]").forEach(b=>b.onclick=()=>{location.href=location.pathname+"?q="+encodeURIComponent(b.dataset.q)});
+ $("k_ask").onclick=()=>kAsk(d);$("k_sub").onclick=()=>kSub(d);
+}
+function kAsk(d){const a=(d.asks||[])[0];aQ=a?a.qid:"";aPick="";aTxt=a?"":(d.name?d.name+"について：":"");aDone=false;mStart("ask")}
+async function kSub(d){await uSub();if(!d.cid&&!d.name)return;["mov","plan","post"].forEach(k=>{const el=$("u_"+k);if(el)el.onclick=()=>{uForm(k,null);U.cid=d.cid||"";U.cname=d.name||d.cid;uDraw()}})}
+
+/* ---- k21c：［❗ 大川さんから］（v=todo）の下に ✅ やること・📣 知らせ（op=from・読むだけ）。いまの答える（mTodo）はそのまま ---- */
+let FX=null,fxAs="",fxBusy=false;
+const FXN={"大川":"大川さん","江藤":"江藤さん","ウンパ":"村井さん"};
+async function fxLoad(){if(fxBusy)return;fxBusy=true;try{const r=await api({op:"from",as:fxAs});FX=r.ok?r:{ok:false,err:r.err}}catch(e){FX={ok:false,err:e.message}}fxBusy=false;if(M)fxDraw()}
+function fxDraw(){
+ const mn=$("mn");if(!mn)return;
+ const old=mn.querySelector("#fx");if(old)old.remove();const ot=mn.querySelector("#fxtop");if(ot)ot.remove();
+ const cb=mn.querySelector(".closeb");
+ const box=document.createElement("div");box.id="fx";
+ if(!FX){box.innerHTML='<div class="msg">やること・知らせを読み込み中…</div>';mn.appendChild(box);return}
+ if(!FX.ok){box.innerHTML='<div class="msg">やること・知らせを読めませんでした（'+esc(FX.err||"")+'）</div>';mn.appendChild(box);return}
+ const other=FX.test&&FX.as!==FX.who;
+ $("hd").textContent=(FX.test?"【試し】":"")+"❗ 大川さんから";
+ // 上：数（答える＋今日までのやること）と、試しの切り替え（大川さんだけ）
+ const top=document.createElement("div");top.id="fxtop";
+ let t="";
+ if(FX.test)t+='<div class="as"><span class="cnt" style="margin:4px 0">試しに：</span>'+["大川","江藤","ウンパ"].map(w=>'<button data-fx="'+w+'" class="'+(FX.as===w?"on":"")+'">'+FXN[w]+'</button>').join("")+'</div>';
+ t+='<div class="box" style="display:flex;gap:14px;font-weight:700;font-size:14px"><span>❓ 答える '+(FX.ua.qs||0)+'問</span><span style="color:#137333">✅ 今日まで '+(FX.today||0)+'件</span></div>';
+ top.innerHTML=t;
+ if(other){ // 大川さんがほかの人として見るとき：答えるは数と件名だけ（答えるのは本人）
+  mn.innerHTML="";$("ft").hidden=true;
+  top.innerHTML+='<div class="ch">❓ 答える（'+FX.ua.cases+'件）</div>'+(FX.ua.cases?'<div class="box"><div class="s">'+esc(FX.ua.names.join("・")+(FX.ua.cases>FX.ua.names.length?" ほか":""))+'</div><div class="hint" style="text-align:left">答えるのは'+esc(FX.name)+'（ここでは見るだけ）</div></div>':'<div class="msg">まだ答えていない問いはありません</div>');
+ }else top.innerHTML+='<div class="ch">❓ 答える</div>';
+ mn.prepend(top);
+ // やること
+ const ic={tk:"📝",sub:"✏️",arr:"✈️"};
+ let h='<div class="ch">✅ やること（'+FX.todo.length+(FX.more?"＋":"")+'）</div>';
+ if(!FX.todo.length)h+='<div class="msg">いまやることはありません</div>';
+ else{h+='<div class="box">';let was=null;
+  FX.todo.forEach(x=>{const g=x.bill?"bill":x.now?"now":"later";
+   if(g!==was){h+='<div class="cnt" style="margin:'+(was?"10px":"0")+' 0 4px">'+(g==="now"?"今日まで":g==="later"?"このあと":"請求（月末）")+'</div>';was=g}
+   const due=x.md?(x.chase?"追いかける ":"")+x.md+(x.late?"（過ぎています）":""):"";
+   const line='<span>'+(ic[x.src]||"")+' '+(x.name?esc(x.name)+"｜":"")+esc(x.text)+'</span>'+(due?'<span style="white-space:nowrap;font-size:12px;color:'+(x.late?"#D93025":"#888")+'">'+esc(due)+'</span>':"");
+   const st='display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px dashed #e3e5e8;font-size:13.5px;color:#1d1d1f;text-decoration:none';
+   h+=x.link?'<a href="'+esc(x.link)+'" target="_blank" style="'+st+'">'+line+'</a>':'<div style="'+st+'">'+line+'</div>';
+   if(x.note)h+='<div class="s" style="font-size:12px;color:#666;margin:-4px 0 4px 22px">'+esc(x.note)+'</div>'});
+  h+='</div><div class="hint">'+(FX.more?"ほか "+FX.more+"件はアプリの宿題で":"これで全部です")+'</div>'}
+ // 知らせ
+ h+='<div class="ch">📣 知らせ（'+FX.news.length+'）</div>';
+ if(!FX.news.length)h+='<div class="msg">この2週間の知らせはありません</div>';
+ else h+='<div class="box">'+FX.news.map((x,i)=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:7px 0;'+(i?"border-top:1px dashed #e3e5e8;":"")+'font-size:13.5px"><span'+(x.src==="ng"?' style="color:#c5221f"':'')+'>'+esc(x.text)+'</span><span style="white-space:nowrap;font-size:12px;color:#888">'+esc(x.md)+'</span></div>').join("")+'</div><div class="hint">大事なもの（取れた・FIX・変わった・見送り）は LINE でも届いています</div>';
+ box.innerHTML=h;mn.appendChild(box);
+ if(cb)mn.appendChild(cb);
+ mn.querySelectorAll("[data-fx]").forEach(b=>b.onclick=()=>{if(fxBusy)return;fxAs=b.dataset.fx;FX=null;if(fxAs==="大川"&&M&&M.cases)mTodo();else fxDraw();fxLoad()});
+}
+{const _t=mTodo,_s=mStart,_d=mSend;
+ mTodo=function(){_t();fxDraw()};
+ mStart=function(v){if(v==="todo")fxLoad();return _s(v)};
+ mSend=async function(){await _d();FX=null;fxDraw();fxLoad()};}
 (async()=>{
  try{
   await liff.init({liffId:LIFF_ID,withLoginOnExternalBrowser:true});
@@ -494,6 +609,7 @@ async function uSend(){
   if(V==="sub")return uSub(); // 提出する（3つを足した入口。前の sSub は残す）
   if(V==="sch")return sSch();
   if(V==="to")return rTop();
+  if(!qid&&V==="list")return kStart(); // k44b：案件一覧（探す窓・件の詳しい画面）
   if(!qid&&(V==="todo"||V==="list"))return mStart(V);
   if(!qid)return err("件の番号がありません（カードの［答える］から開いてください）");
   const r=await api({op:"load"});if(!r.ok)return err(r.err);
