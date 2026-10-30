@@ -43,7 +43,8 @@ label.send,label.send2{display:block}#xs{margin-bottom:10px}
 button.closeb{display:block;width:100%;margin-top:18px;border:0;background:none;color:#666;font-size:14px;padding:10px;text-decoration:underline;text-underline-offset:3px}
 .addb{display:block;text-align:center;border:1.5px dashed #b9c2bd;border-radius:12px;padding:10px;color:#137333;font-weight:700;font-size:13.5px;margin-bottom:12px;cursor:pointer;background:#fff}
 button.send2b{display:block;width:100%;border:1.5px solid var(--g);border-radius:12px;padding:12px;font-size:15px;font-weight:700;background:#fff;color:#137333}
-.dtr{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer;user-select:none}.dtr.gray{background:#eef0f3}.dtr.ask{background:#f1f3f4;color:#999;cursor:default}.dtr .dd{width:78px;flex:none;font-weight:700;font-size:14px}.dtr .dd.sat{color:#1a56c4}.dtr .dd.sun{color:#c5221f}.dtr .it{flex:1;font-size:12px;color:#444;line-height:1.55}.dtr .it .tm{color:#888;margin-right:6px}.dtr .it .no{color:#aaa}.dtr .pk{flex:none;min-width:48px;text-align:center;border:1.5px solid var(--bd);border-radius:999px;padding:5px 8px;font-size:13px;font-weight:700;color:#bbb}.dtr .pk.on{background:var(--g);border-color:var(--g);color:#fff}.dtr .pk.am,.dtr .pk.pm{background:#e7f8ee;border-color:var(--g);color:#137333}.dtw{font-size:12px;color:#666;margin:14px 2px 6px;font-weight:700}.tst{color:#D93025;font-weight:700;font-size:12px;margin-bottom:4px}
+.dtr{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:10px 12px;margin-bottom:6px;cursor:pointer;user-select:none}.dtr.gray{background:#eef0f3}.dtr.ask{background:#f1f3f4;color:#999;cursor:default}.dtr .dd{width:92px;flex:none;font-weight:700;font-size:14px}.dtr .dd.sat{color:#1a56c4}.dtr .dd.sun{color:#c5221f}.dtr .it{flex:1;font-size:12px;color:#444;line-height:1.55}.dtr .it .tm{color:#888;margin-right:6px}.dtr .it .no{color:#aaa}.dtr .pk{flex:none;min-width:48px;text-align:center;border:1.5px solid var(--bd);border-radius:999px;padding:5px 8px;font-size:13px;font-weight:700;color:#bbb}.dtr .pk.on{background:var(--g);border-color:var(--g);color:#fff}.dtr .pk.am,.dtr .pk.pm{background:#e7f8ee;border-color:var(--g);color:#137333}.dtw{font-size:12px;color:#666;margin:14px 2px 6px;font-weight:700}.tst{color:#D93025;font-weight:700;font-size:12px;margin-bottom:4px}
+.mi{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:8px;cursor:pointer}.mi .ic{font-size:26px;width:34px;text-align:center}.mi .tx{flex:1}.mi .tx b{display:block;font-size:15px}.mi .tx span{font-size:12px;color:#666}.mi.soon{opacity:.55}.mi .sn{font-size:11px;color:#888;border:1px solid var(--bd);border-radius:6px;padding:1px 6px}.ak{display:block;background:#fff8e1;border:1px solid #f1d98a;border-radius:12px;padding:10px 12px;margin-bottom:8px;color:#1d1d1f;text-decoration:none}.ak b{display:block}.ak span{font-size:12px;color:#666}
 </style></head><body>
 <header id="hd">読み込み中…</header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -265,6 +266,31 @@ async function tSend(none){
   $("ft").hidden=true;$("mn").innerHTML='<div class="box ok">'+(T.test?'<div class="tst">【テスト・村井さんに見える】</div>':'')+'✅ '+esc(r.again?"もう送っています：":"大川さんに送りました：")+'<br><b>'+esc(r.text)+'</b></div>'+(liff.isInClient&&liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">閉じる</button>':'');
  }catch(e){tBusy=false;$("sd").disabled=false;alertBox("送れませんでした："+e.message)}
 }
+
+/* k16：下のメニュー［提出する］［スケジュール］ */
+function sSub(){
+ $("hd").textContent="提出する";$("ft").hidden=true;
+ const it=(ic,t,d,on,id)=>'<div class="mi'+(on?'':' soon')+'" id="'+id+'"><div class="ic">'+ic+'</div><div class="tx"><b>'+t+'</b><span>'+d+'</span></div>'+(on?'':'<span class="sn">準備中</span>')+'</div>';
+ $("mn").innerHTML=it("🧾","経費（レシート）","写真か PDF を送る",true,"s_exp")+it("🎬","動画の確認を回す","できた動画を大川さんに確かめてもらう",false,"s_mov")+it("📝","企画・構成案","先方に出す前に大川さんへ",false,"s_plan")+it("📊","投稿した","URL とインサイト",false,"s_post")+'<div class="hint">準備中のものは、いままでどおり大川さんに LINE で送ってください</div>';
+ $("s_exp").onclick=()=>xPick();
+ ["s_mov","s_plan","s_post"].forEach(id=>$(id).onclick=()=>alertBox("準備中です。いまは大川さんに LINE で送ってください"));
+}
+async function sSch(){
+ $("hd").textContent="スケジュール";$("ft").hidden=true;
+ const r=await api({op:"mysch"});if(!r.ok)return err(r.err);
+ let h=(r.test?'<div class="tst">【テスト・それぞれ自分の予定が見える】</div>':'');
+ if(r.ask.length)h+='<div class="dtw">答えていない日程の確認</div>'+r.ask.map(a=>'<a class="ak" href="?v=dt&id='+encodeURIComponent(a.id)+'"><b>'+esc(a.name)+'</b><span>'+esc(a.day)+(a.cand?'（出られる日を選ぶ）':'（大丈夫？）')+'</span></a>').join("");
+ if(!r.calOk)h+='<div class="hint" style="text-align:left">カレンダーは読めませんでした（アプリの予定だけ）</div>';
+ let wk="";
+ r.days.forEach((x,i)=>{
+  const m=x.d.slice(0,7);if(m!==wk){wk=m;h+='<div class="dtw">'+(+x.d.slice(5,7))+'月</div>'}
+  const cl=x.wd==="土"?" sat":x.wd==="日"?" sun":"";
+  const its=x.items.length?x.items.map(i=>'<div><span class="tm">'+esc(i.t||"終日")+'</span>'+(i.tag?'［'+esc(i.tag)+'］':'')+esc(i.what||"予定")+'</div>').join(""):'<div class="no">予定なし</div>';
+  h+='<div class="dtr'+(x.allDay?" gray":"")+'" style="cursor:default"><div class="dd'+cl+'">'+x.md+'（'+x.wd+'）'+(i===0?'<div style="font-size:11px;color:#06C755">今日</div>':'')+'</div><div class="it">'+its+'</div></div>';
+ });
+ h+='<div class="mi soon" id="s_ng" style="margin-top:12px"><div class="ic">🚫</div><div class="tx"><b>NG の日を入れる</b><span>出られない日を先に知らせる</span></div><span class="sn">準備中</span></div>';
+ $("mn").innerHTML=h;$("s_ng").onclick=()=>alertBox("準備中です。いまは大川さんに LINE で送ってください");
+}
 (async()=>{
  try{
   await liff.init({liffId:LIFF_ID,withLoginOnExternalBrowser:true});
@@ -272,6 +298,8 @@ async function tSend(none){
   if(V==="ask"){aQ=qid;return mStart(V)}
   if(V==="exp")return xPick();
   if(V==="dt")return tStart(P.get("id")||"");
+  if(V==="sub")return sSub();
+  if(V==="sch")return sSch();
   if(!qid&&(V==="todo"||V==="list"))return mStart(V);
   if(!qid)return err("件の番号がありません（カードの［答える］から開いてください）");
   const r=await api({op:"load"});if(!r.ok)return err(r.err);
