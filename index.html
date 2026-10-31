@@ -619,15 +619,17 @@ let K={cases:{},q2c:{},q:"",d:null};
 async function kStart(){
  $("hd").textContent="案件一覧";$("ft").hidden=true;$("mn").innerHTML='<div class="skl"><div class="skc"><i></i><i class="w6"></i><i class="w4"></i></div><div class="skc"><i></i><i class="w6"></i></div><div class="skc"><i class="w8"></i><i class="w4"></i></div></div>';
  const kre=()=>{if($("k_rows")&&!K.q)kList()};
- try{const [r,c]=await Promise.all([apiC({op:"list"},r=>{M=r;kre()}),apiC({op:"kcases"},c=>{K.cases=c.cases||{};K.q2c=c.q2c||{};kre()}).catch(()=>({ok:false}))]);
- if(!r.ok)return err(r.err);M=r;if(c&&c.ok){K.cases=c.cases||{};K.q2c=c.q2c||{}}
+ try{const [r,c]=await Promise.all([apiC({op:"list"},r=>{M=kDd(r);kre()}),apiC({op:"kcases"},c=>{K.cases=c.cases||{};K.q2c=c.q2c||{};kre()}).catch(()=>({ok:false}))]);
+ if(!r.ok)return err(r.err);M=kDd(r);if(c&&c.ok){K.cases=c.cases||{};K.q2c=c.q2c||{}}
  kList()}catch(e){err("開けませんでした："+e.message)}
 }
 function kCid(x){return x.cid||K.q2c[x.qid]||""}
-const KOS=["商談前","商談中","実施確定","実施中","実施完了","請求済み","入金済み","完了","見送り"];
+// k35：同じ件の行が2つ以上あるとき（問いのカードが2枚など）は1行に。答える番のもの・まだの問いが多いものを残す
+function kDd(r){if(!r||!r.list)return r;const by={},out=[];r.list.forEach(x=>{const c=x.cid||"";if(!c){out.push(x);return}const i=by[c];if(i==null){by[c]=out.length;out.push(x);return}const y=out[i],sc=z=>(z.label==="あなたの番"?100:0)+(z.open||0)+(z.qid?1:0);if(sc(x)>sc(y))out[i]=x});return Object.assign({},r,{list:out})}
+const KOS=["商談前","商談中","保留","実施確定","実施中","実施完了","請求済み","入金済み","完了","見送り"];
 function kOs(x){return x.os||(x.label==="完了"?"完了":"商談前")}
 function kHas(x,k){return k==="あなたの番"?x.label==="あなたの番":kOs(x)===k}
-function kCls(o){return /^(商談前|商談中)$/.test(o)?"l-wait":/^(実施確定|実施中)$/.test(o)?"l-go":/^(実施完了|請求済み|入金済み)$/.test(o)?"l-bill":"l-done"}
+function kCls(o){if(o==="保留")return "l-done";return /^(商談前|商談中)$/.test(o)?"l-wait":/^(実施確定|実施中)$/.test(o)?"l-go":/^(実施完了|請求済み|入金済み)$/.test(o)?"l-bill":"l-done"}
 function kInfo(x){return K.cases[kCid(x)]||{}}
 function kList(){
  const L=M.list||[];$("hd").textContent="案件一覧";$("ft").hidden=true;
