@@ -112,6 +112,7 @@ body.kb footer,body.kb .kact{display:none!important}
 .skc{background:#fff;border-radius:16px;padding:16px 14px;margin-bottom:10px;display:grid;gap:10px}.skc i{display:block;height:12px;border-radius:6px;background:linear-gradient(90deg,#E6ECE8 25%,#F3F6F4 50%,#E6ECE8 75%);background-size:200% 100%;animation:skm 1.2s ease-in-out infinite}.skc i.w8{width:80%}.skc i.w6{width:60%}.skc i.w4{width:40%}@keyframes skm{from{background-position:200% 0}to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){.skc i{animation:none}}
 .mi .ti{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
+label.send2b{display:block;border:1.5px solid var(--g);border-radius:12px;padding:11px;font-size:14.5px;font-weight:700;background:#fff;color:#137333;text-align:center}
 </style></head><body>
 <header id="tb" class="tb"><button id="hbk" class="tbb" hidden aria-label="戻る"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="hd">読み込み中…</div><button id="hx" class="tbb" aria-label="閉じる"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header><main id="mn"><div class="skl"><div class="skc"><i></i><i class="w6"></i><i class="w4"></i></div><div class="skc"><i></i><i class="w6"></i></div><div class="skc"><i class="w8"></i><i class="w4"></i></div></div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -135,6 +136,7 @@ const AT={"江藤":"@Yuu","ウンパ":"@村井亮介","大川":"@Tas"};
 (function(){let t=0;const isIn=e=>e&&e.matches&&e.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select');
  document.addEventListener("focusin",e=>{if(isIn(e.target)){clearTimeout(t);document.body.classList.add("kb")}});
  document.addEventListener("focusout",e=>{if(isIn(e.target)){clearTimeout(t);t=setTimeout(()=>{if(!isIn(document.activeElement))document.body.classList.remove("kb")},120)}});})();
+(function(){const go=()=>{const hd=$("hd");if(!hd)return setTimeout(go,50);const set=()=>{const t=hd.textContent.replace(/^【[^】]*】/,"").trim();if(t&&t!=="読み込み中…")document.title=t};new MutationObserver(set).observe(hd,{childList:true,characterData:true,subtree:true});set()};go()})();
 function err(m){$("hd").textContent="答える";$("mn").innerHTML='<div class="msg">'+esc(m)+'</div>';$("ft").hidden=true}
 async function api(o){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(Object.assign({idToken:liff.getIDToken(),q:qid},o))});return r.json()}
 /* k26：読むだけの画面は、前に開いたときの中身をすぐ出し、新しい中身が届いたら差し替える（届くまでに何か押したら差し替えない） */
@@ -210,7 +212,7 @@ function mTodo(){
    h+='<div class="box"><div class="qh"><span>'+esc(String(c.head).replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u,""))+'</span></div><div class="qq">'+esc(q.q)+'</div>'+(bg?'<div class="s">'+bg+'</div>':"")+'<div class="chips">'+q.btns.map(b=>'<button class="chip'+(mSel[key]===b?" on":"")+'" data-mk="'+key+'" data-v="'+esc(b)+'">'+esc(b)+'</button>').join("")+'</div>'
     +'<textarea placeholder="ひとこと（任意）" data-mn="'+key+'">'+esc(mNote[key]||"")+'</textarea>'+(st?'<div class="st">いまの答え：'+esc(st)+'</div>':"")+(q===qs[qs.length-1]?sumH:"")+'</div>'});
  });
- $("mn").innerHTML='<div class="cnt">'+total+'問中 '+got+'問</div><div class="prog"><b style="width:'+(total?got/total*100:0)+'%"></b></div>'+h;
+ $("mn").innerHTML=(total>1?'<div class="cnt">'+total+'問中 '+got+'問</div><div class="prog"><b style="width:'+(total?got/total*100:0)+'%"></b></div>':'')+h;
  $("ft").hidden=false;$("hn").textContent=got<total?"答えた問いだけ先に送れます。残りはまたこのメニューから":"全部そろいました";
  document.querySelectorAll("[data-mk]").forEach(b=>b.onclick=()=>{const k=b.dataset.mk;mSel[k]=mSel[k]===b.dataset.v?undefined:b.dataset.v;mTodo()});
  document.querySelectorAll("[data-mn]").forEach(t=>t.oninput=()=>{mNote[t.dataset.mn]=t.value;mUpd()});
@@ -409,7 +411,7 @@ async function rTop(){
  $("mn").innerHTML='<div class="tg2">'+g('<div class="ti" style="background:#E8F0FE;color:#2F6FDB"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>',"航空券","r_fly")+g('<div class="ti" style="background:#F3E8FD;color:#8A4FD3"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V8M21 20v-6a3 3 0 0 0-3-3H10v9M3 14h18"/><circle cx="6.5" cy="11" r="1.5"/></svg></div>',"宿","r_stay")+g('<div class="ti" style="background:#E3F7EC;color:#05A549"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4M16 21l-2-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/></svg></div>',"移動","r_move")+g('<div class="ti" style="background:#FFF1DB;color:#D9822B"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>',"その他の手配","r_other")+'</div><div class="mi" id="r_ask"><div class="ti" style="background:#EEF1F5;color:#5E6E64"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg></div><div class="tx"><b>相談・質問</b><span style="display:block;font-size:12px;color:#888;font-weight:400">このトークに、そのまま書いてください</span></div></div><div class="dtw">頼んだもの</div><div id="r_list" class="lst">…</div>';
  ["fly","stay","move","other"].forEach(k=>$("r_"+k).onclick=()=>rForm(k));
  // k25：相談・質問は画面を開かず、トークに直接書く（画面は遅いので）
- $("r_ask").onclick=()=>{$("ft").hidden=true;$("mn").innerHTML='<div class="box"><b>💬 このトークに、そのまま書いてください</b><div class="s" style="margin-top:6px;line-height:1.7">・「？」で終わる質問は、大川（AI）が先に答えます。分からないときは大川さんに回ります<br>・件名（例：花王 フットクリーム）を入れると、どの件か分かりやすくなります<br>・相談・お願いは、大川さんが読んで返します</div></div>'+(liff.isInClient&&liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">トークに戻る</button>':'')+'<div class="bk" style="margin-top:12px" onclick="rTop()">← 戻る</div>'};
+ $("r_ask").onclick=()=>{try{if(liff.isInClient&&liff.isInClient())return liff.closeWindow()}catch(e){}$("ft").hidden=true;$("mn").innerHTML='<div class="box"><b>💬 このトークに、そのまま書いてください</b><div class="s" style="margin-top:6px;line-height:1.7">・「？」で終わる質問は、大川（AI）が先に答えます。分からないときは大川さんに回ります<br>・件名（例：花王 フットクリーム）を入れると、どの件か分かりやすくなります<br>・相談・お願いは、大川さんが読んで返します</div></div>'+(liff.isInClient&&liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">トークに戻る</button>':'')+'<div class="bk" style="margin-top:12px" onclick="rTop()">← 戻る</div>'};
  const rl=r=>{if(!$("r_list"))return;$("r_list").innerHTML=r.ok&&r.list.length?r.list.map(x=>'<div class="box" style="padding:9px 11px;margin-bottom:6px"><span class="st">'+esc(x.st)+'</span><b>'+esc(x.kind)+'</b> '+esc(x.name||"")+'<div style="white-space:pre-wrap;color:#555;font-size:12px;margin-top:3px">'+esc(x.text)+'</div></div>').join(""):'<div class="hint" style="text-align:left">まだありません</div>'};
  try{const r=await apiC({op:"arrlist"},rl);rl(r)}catch(e){$("r_list").textContent=""}
 }
@@ -453,7 +455,7 @@ function rDraw(){
  // 乗る人・泊まる人（検索で足す）
  if(k!=="other"&&!(k==="move"&&o.type!=="新幹線")){
   const opt=k==="fly"?(p,i)=>rSel("people."+i+".cls",["エコノミー","プレエコ","ビジネス"],p.cls)+rSel("people."+i+".air",["JALだけ","ほかもOK"],p.air||"ほかもOK"):k==="stay"?(p,i)=>rSel("people."+i+".room",["1人部屋","同じ部屋"],p.room):(p,i)=>rSel("people."+i+".seat",["指定席","グリーン"],p.seat);
-  h+='<div class="fm">'+(o.people||[]).map((p,i)=>{const x=rPaxOf(p.who);const ok=x&&x.roma&&(k!=="fly"||x.pp||x.jmb);return '<div class="pp"><div class="row2"><b style="flex:1">'+esc(p.who)+'</b>'+(k==="fly"?'<span class="bdg'+(ok?" ok":"")+'" data-pi="'+i+'">'+(ok?"✓ "+[x.jmb?"JMB":"",x.pp?"旅券":""].filter(Boolean).join("・"):"情報を入れる")+'</span>':'')+'<span class="x" data-rm="'+i+'">✕</span></div><div class="row2">'+opt(p,i)+'</div></div>'}).join("")+'<input id="r_pq" type="search" placeholder="🔍 人を検索・追加" value="'+esc(R.pq)+'"><div id="r_ps"></div></div>';
+  h+='<div class="fm">'+(o.people||[]).map((p,i)=>{const x=rPaxOf(p.who);const ok=x&&x.roma&&(k!=="fly"||x.pp||x.jmb);return '<div class="pp"><div class="row2"><b style="flex:1">'+esc(p.who)+'</b>'+(k==="fly"?'<span class="bdg'+(ok?" ok":"")+'" data-pi="'+i+'">'+(ok?"✓ "+[x.jmb?"JMB":"",x.pp?"旅券":""].filter(Boolean).join("・"):"パスポート・JMBを入れる")+'</span>':'')+'<span class="x" data-rm="'+i+'">✕</span></div><div class="row2">'+opt(p,i)+'</div></div>'}).join("")+'<input id="r_pq" type="search" placeholder="🔍 人を検索・追加" value="'+esc(R.pq)+'"><div id="r_ps"></div></div>';
  }
  h+='<div class="fm">'+(R.memoOpen||R.memo?'<textarea id="r_memo" placeholder="メモ" style="margin-top:0">'+esc(R.memo)+'</textarea>':'<div class="bk" id="r_mo" style="margin:8px 0 0">＋ メモ</div>')+'</div>';
  $("mn").innerHTML=h;
@@ -539,7 +541,7 @@ function uDrawSub(wait){
 function uForm(k,fix){
  U.k=k;U.fix=fix||null;U.rid=xRid();U.busy=false;U.q="";U.memo="";U.memoOpen=false;U.shots=[];
  U.cid=fix?fix.cid:"";U.cname=fix?(fix.name||fix.cid):"";
- U.o=k==="mov"?{stage:fix?"修正稿":"初稿",urls:[""],tz:"日本時間",rush:"ふつう"}:k==="plan"?{urls:[""],text:""}:{urls:[""],ins:""};
+ U.o=k==="mov"?{stage:fix?"修正稿":"",urls:[""],tz:"日本時間",rush:"ふつう"}:k==="plan"?{urls:[""],text:""}:{urls:[""],ins:""};
  uDraw();
 }
 function uIn(name,val,type,ph){return '<input type="'+(type||"text")+'" data-u="'+name+'" value="'+esc(val||"")+'" placeholder="'+esc(ph||"")+'">'}
@@ -557,12 +559,17 @@ function uDraw(){
  if(k==="mov"){
   // k30：選ぶ欄は横並びのボタン。どの欄にも名前
   const wd=String(o.when||"").slice(0,10),wm=wd===uDay(0)?"今日":wd===uDay(1)?"明日":wd?"日付を選ぶ":"";
-  h+='<div class="fm"><div class="lb" style="margin-top:0">何稿？</div>'+uSeg("stage",["初稿","修正稿","完成"],o.stage)+'<div class="lb">動画のリンク</div>'+urls("もう1本","ドライブなどの URL")+'</div>';
-  h+='<div class="fm"><div class="lb" style="margin-top:0">投稿文（キャプション）</div>'+uTa("caption",o.caption,"なければ空でOK",3)+'<div class="lb">サムネ（あれば）</div>'+uIn("thumb",o.thumb,"url","サムネの URL")+'</div>';
+  // k34：何稿かは聞かない（受け口が前の提出から決める）。動画はリンクかトークで送る。サムネは写真
+  const again=U.fix||(U.list||[]).some(x=>x.k==="mov"&&((U.cid&&x.cid===U.cid)||(U.cname&&x.name===U.cname)));
+  h+='<div class="fm">'+(U.cid||U.cname?'<div class="kx" style="margin-bottom:8px">'+(again?'直した版として出します':'この件ではじめて出す動画です')+'</div>':'')
+   +'<div class="lb" style="margin-top:0">動画</div><div class="seg2"><button type="button" data-uchat="0" class="'+(o.inChat?"":"on")+'">リンクを貼る</button><button type="button" data-uchat="1" class="'+(o.inChat?"on":"")+'">トークで送る</button></div>'
+   +(o.inChat?'<div class="kx" style="margin-top:8px;line-height:1.6">出したあと、このトークに動画をそのまま送ってください</div>':'<div style="margin-top:8px"></div>'+urls("もう1本","ドライブなどのリンク"))+'</div>';
+  h+='<div class="fm"><div class="lb" style="margin-top:0">投稿文（キャプション）</div>'+uTa("caption",o.caption,"なければ空でOK",3)
+   +'<label class="send2b" style="text-align:center;cursor:pointer;margin-top:10px">📷 サムネの写真'+(U.shots.length?'（'+U.shots.length+'枚）':'（あれば）')+'<input id="u_ph" type="file" accept="image/*" multiple hidden></label></div>';
   // k31：投稿日は本人が決めない（先方の全体スケジュールに従う）。選んだ件の先方のスケジュールを見せるだけ
-  const cs=(U.cs||[]).find(c=>c.id===U.cid),sc=(cs&&cs.sched)||[],hi=o.stage==="修正稿"?"修正稿":o.stage==="完成"?"投稿":"初稿";
+  const cs=(U.cs||[]).find(c=>c.id===U.cid),sc=(cs&&cs.sched)||[],hi=again?"修正稿":"初稿";
   h+='<div class="fm"><div class="lb" style="margin-top:0">先方のスケジュール</div>'+(sc.length?'<div class="ssc">'+sc.map(q=>'<div class="'+(q[0]===hi?"on":"")+'"><span>'+esc(q[0])+'</span><b>'+esc(q[1])+'</b></div>').join("")+'</div>':'<div class="kx" style="line-height:1.6">'+(U.cid?'この件のスケジュールはまだ入っていません。大川さんが先方に確かめます':'件を選ぶと、先方から出ているスケジュールが出ます')+'</div>')
-   +'<div class="lb">急ぎ</div>'+uSeg("rush",["ふつう","今日中","1時間以内"],o.rush)+'</div>';
+   +'<label class="ck" style="margin-top:12px;display:flex;gap:8px;align-items:center;font-weight:700"><input type="checkbox" id="u_rush"'+(o.rush&&o.rush!=="ふつう"?" checked":"")+'> 急ぎで見てほしい（今日中）</label></div>';
  }else if(k==="plan"){
   h+='<div class="fm"><div class="lb" style="margin-top:0">企画・構成案（貼りつけ）</div>'+uTa("text",o.text,"企画の文",6)+'<div class="lb">ファイル・リンク</div>'+urls("もう1つ","URL（ドライブ・ドキュメントなど）")+'</div>';
  }else{
@@ -574,6 +581,8 @@ function uDraw(){
  const re=()=>{uKeep();uDraw()};
  if($("u_q")){$("u_q").oninput=e=>{U.q=e.target.value;uSugC()};$("u_q").onfocus=uSugC}
  if($("u_cx"))$("u_cx").onclick=()=>{U.cid="";U.cname="";re()};
+ document.querySelectorAll("[data-uchat]").forEach(b=>b.onclick=()=>{uKeep();o.inChat=b.dataset.uchat==="1";uDraw()});
+ if($("u_rush"))$("u_rush").onchange=e=>{uKeep();o.rush=e.target.checked?"今日中":"ふつう";uDraw()};
  document.querySelectorAll("[data-useg]").forEach(b=>b.onclick=()=>{uKeep();o[b.dataset.useg]=b.dataset.v;uDraw()});
  document.querySelectorAll("[data-uwhen]").forEach(b=>b.onclick=()=>{uKeep();const v=b.dataset.uwhen,tm=String(o.when||"").slice(11,16)||"19:00";o.when=v==="今日"?uDay(0)+"T"+tm:v==="明日"?uDay(1)+"T"+tm:(String(o.when||"").slice(0,10)&&String(o.when).slice(0,10)!==uDay(0)&&String(o.when).slice(0,10)!==uDay(1)?o.when:uDay(2)+"T"+tm);uDraw()});
  if($("u_add"))$("u_add").onclick=()=>{uKeep();if(o.urls.length<10)o.urls.push("");uDraw()};
@@ -593,14 +602,14 @@ async function uSend(){
  if(!U.cid&&!U.cname)return alertBox("どの件かを選んでください");
  const urls=(o.urls||[]).map(s=>String(s||"").trim()).filter(Boolean);
  if(urls.some(u=>!/^https?:\/\//.test(u)))return alertBox("URL は http から入れてください");
- if(k==="mov"&&!urls.length)return alertBox("動画の URL を入れてください");
+ if(k==="mov"&&!urls.length&&!U.o.inChat)return alertBox("動画のリンクを貼るか、［トークで送る］を選んでください");
  if(k==="plan"&&!urls.length&&!String(o.text||"").trim())return alertBox("企画の文かリンクを入れてください");
  if(k==="post"&&!urls.length&&!String(o.ins||"").trim()&&!U.shots.length)return alertBox("投稿の URL か、インサイトを入れてください");
  o.urls=urls;if(k==="post"){if(!o.schedOn)delete o.sched;delete o.schedOn;o.shots=U.shots}
  U.busy=true;$("sd").disabled=true;$("sd").textContent="送っています…";
  try{const r=await api({op:"subsave",kind:k,o,cid:U.cid,cname:U.cname,memo:U.memo,rid:U.rid});U.busy=false;
   if(!r.ok){$("sd").disabled=false;$("sd").textContent="大川さんに出す";return alertBox(r.err)}
-  $("ft").hidden=true;$("mn").innerHTML='<div class="box ok">✅ 大川さんに出しました'+(r.id?'（'+esc(r.id)+(r.round?'・'+esc(r.round):'')+'）':'')+'</div><div class="hint">大川さんが［OK］か［直して］を返すと、LINE に届きます</div><button class="send2b" style="margin-top:12px" onclick="uSub()">戻る</button>'+(liff.isInClient&&liff.isInClient()?'<button class="send" style="margin-top:10px" onclick="liff.closeWindow()">閉じる</button>':'');
+  $("ft").hidden=true;$("mn").innerHTML='<div class="box ok">✅ 大川さんに出しました'+(r.round?'（'+(/^修正/.test(r.round)?"直した版":/^初稿/.test(r.round)?"1回目":esc(r.round))+'）':'')+'</div>'+(U.o&&U.o.inChat?'<div class="box" style="background:#FFF1DB"><b>このあと、このトークに動画を送ってください</b></div>':'')+'<div class="hint">大川さんが見たら、LINE で［OK］か［直して］が届きます</div><button class="send2b" style="margin-top:12px" onclick="uSub()">戻る</button>'+(liff.isInClient&&liff.isInClient()?'<button class="send" style="margin-top:10px" onclick="liff.closeWindow()">閉じる</button>':'');
  }catch(e){U.busy=false;$("sd").disabled=false;$("sd").textContent="大川さんに出す";alertBox("送れませんでした："+e.message)}
 }
 
@@ -643,7 +652,7 @@ function kRows(){
   return '<div class="row ko kr'+(me?" me":"")+'" data-o="'+id+'"><div class="kb"></div><div class="kc"><div class="rt">'+esc(head)+'</div>'
   +'<div class="km"><span class="lab '+kCls(kOs(x))+'">'+esc(kOs(x))+'</span>'+(st?'<span class="stg">'+esc(st)+'</span>':'')+(meta?'<span class="kx">'+esc(meta)+'</span>':'')+'</div>'
   +(open.length?'<div class="kq">'+(me?"あと"+open.length+"問：":"答え待ち：")+esc(open.map(y=>y.q).join("・"))+'</div>':'')
-  +(me?(x.mine1?'<button data-q="'+esc(x.qid)+'">答える（'+x.open+'問）</button>':'<div class="kq" style="color:#888">グループのカードの［答える］から答えてください</div>'):"")
+  +(me?('<button data-q="'+esc(x.qid)+'">答える（'+x.open+'問）</button>'):"")
   +'</div><div class="kv2">›</div></div>'}).join(""):'<div class="msg">ありません</div>');
  document.querySelectorAll("#k_rows .row button[data-q]").forEach(b=>b.onclick=e=>{e.stopPropagation();location.href=location.pathname+"?q="+encodeURIComponent(b.dataset.q)});
  document.querySelectorAll("#k_rows .row[data-o]").forEach(el=>el.onclick=()=>{const x=L[+el.dataset.o];if(x)kOpen(kCid(x),x.qid||"")});
@@ -704,7 +713,7 @@ function fxDraw(){
  const top=document.createElement("div");top.id="fxtop";
  let t="";
  if(FX.test)t+='<div class="as"><span class="cnt" style="margin:4px 0">試しに：</span>'+["大川","江藤","ウンパ"].map(w=>'<button data-fx="'+w+'" class="'+(FX.as===w?"on":"")+'">'+FXN[w]+'</button>').join("")+'</div>';
- t+='<div class="stats"><button class="stt'+((FX.ua.qs||0)?" on":"")+'" data-go="fx_q"><b>'+(FX.ua.qs||0)+'</b><span>答える問い</span></button><button class="stt" data-go="fx_t"><b>'+(FX.today||0)+'</b><span>今日まで</span></button><button class="stt" data-go="fx_n"><b>'+((FX.news||[]).length)+'</b><span>知らせ</span></button></div>';
+ t+='<div class="stats"><button class="stt'+((FX.ua.qs||0)?" on":"")+'" data-go="fx_q"><b>'+(FX.ua.qs||0)+'</b><span>答える問い</span></button><button class="stt" data-go="fx_t"><b>'+(FX.today||0)+'</b><span>今日までのやること</span></button><button class="stt" data-go="fx_n"><b>'+((FX.news||[]).length)+'</b><span>知らせ</span></button></div>';
  top.innerHTML=t;
  if(other){ // 大川さんがほかの人として見るとき：答えるは数と件名だけ（答えるのは本人）
   mn.innerHTML="";$("ft").hidden=true;
@@ -727,7 +736,7 @@ function fxDraw(){
  // 知らせ
  h+='<div class="ch" id="fx_n">知らせ（'+FX.news.length+'）</div>';
  if(!FX.news.length)h+='<div class="msg">この2週間の知らせはありません</div>';
- else h+='<div class="box">'+FX.news.map((x,i)=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:7px 0;'+(i?"border-top:1px dashed #e3e5e8;":"")+'font-size:13.5px"><span'+(x.src==="ng"?' style="color:#c5221f"':'')+'>'+esc(x.text)+'</span><span style="white-space:nowrap;font-size:12px;color:#888">'+esc(x.md)+'</span></div>').join("")+'</div><div class="hint">大事なもの（取れた・FIX・変わった・見送り）は LINE でも届いています</div>';
+ else h+='<div class="box">'+FX.news.map((x,i)=>'<div style="display:flex;justify-content:space-between;gap:8px;padding:7px 0;'+(i?"border-top:1px dashed #e3e5e8;":"")+'font-size:13.5px"><span'+(x.src==="ng"?' style="color:#c5221f"':'')+'>'+esc(x.text)+'</span><span style="white-space:nowrap;font-size:12px;color:#888">'+esc(x.md)+'</span></div>').join("")+'</div><div class="hint">大事なもの（取れた・決まった・変わった・見送り）は LINE でも届いています</div>';
  box.innerHTML=h;mn.appendChild(box);
  if(cb)mn.appendChild(cb);
  mn.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>{const el=$(b.dataset.go);if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-60,behavior:"smooth"})});
