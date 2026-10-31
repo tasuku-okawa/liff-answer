@@ -456,7 +456,7 @@ function mtBox(r){
  return h+'</div>';
 }
 function mtDay(k){const d=new Date(Date.now()+k*864e5);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
-function mtNew(){const me=(SC&&SC.who)||"大川";MT={me,what:"",who:MTW.map(w=>w[0]).filter(w=>w!==me),len:60,when:"2w",from:mtDay(1),to:mtDay(14),band:"any",wk:false,slots:null,pick:[],calNg:[],rid:Math.random().toString(36).slice(2),busy:false};mtForm()}
+function mtNew(){const me=(SC&&SC.who)||"大川";MT={me,what:"",who:MTW.map(w=>w[0]).filter(w=>w!==me),len:60,when:"2w",from:mtDay(1),to:mtDay(14),bands:["am","pm"],wk:false,slots:null,pick:[],calNg:[],rid:Math.random().toString(36).slice(2),busy:false};mtForm()}
 function mtRange(){const w=new Date().getDay();if(MT.when==="1w")return [mtDay(1),mtDay((7-w)%7+7)];if(MT.when==="2w")return [mtDay(1),mtDay(14)];if(MT.when==="4w")return [mtDay(1),mtDay(30)];return [MT.from,MT.to]}
 function mtKeep(){if($("mt_w"))MT.what=$("mt_w").value;if($("mt_f"))MT.from=$("mt_f").value;if($("mt_t"))MT.to=$("mt_t").value;if($("mt_wk"))MT.wk=$("mt_wk").checked}
 function mtForm(){
@@ -468,7 +468,7 @@ function mtForm(){
  h+='<div class="fm"><div class="lb" style="margin-top:0">長さ</div>'+seg("len",[["30","30分"],["60","1時間"],["120","2時間"]],String(MT.len))
   +'<div class="lb">いつごろ？</div>'+seg("when",[["1w","来週まで"],["2w","2週間"],["4w","1か月"],["pick","日を決める"]],MT.when)
   +(MT.when==="pick"?'<div class="row2" style="margin-top:8px"><input type="date" id="mt_f" value="'+esc(MT.from)+'">〜<input type="date" id="mt_t" value="'+esc(MT.to)+'"></div>':'')
-  +'<div class="lb">時間帯</div>'+seg("band",[["any","10〜21時"],["day","昼 10〜18時"],["eve","夜 18時〜"]],MT.band)
+  +'<div class="lb">時間帯（いくつでも）</div><div class="chips">'+[["am","午前 10〜12時"],["pm","午後 12〜18時"],["eve","夜 18〜22時"]].map(o=>'<button type="button" data-mtb="'+o[0]+'" class="'+(MT.bands.includes(o[0])?"on":"")+'">'+o[1]+'</button>').join("")+'</div>'
   +'<label class="ck" style="margin-top:10px"><input type="checkbox" id="mt_wk"'+(MT.wk?" checked":"")+'> 土日も入れる</label></div>';
  if(MT.slots){
   h+='<div class="ch" id="mt_res">空いている枠（'+MT.slots.length+'）</div>';
@@ -483,6 +483,7 @@ function mtForm(){
  $("mt_w").oninput=()=>{MT.what=$("mt_w").value;mtFoot()};
  document.querySelectorAll("[data-mtp]").forEach(b=>b.onclick=()=>{$("mt_w").value=b.dataset.mtp;MT.what=b.dataset.mtp;mtFoot()});
  document.querySelectorAll("[data-mtwho]").forEach(b=>b.onclick=()=>{const w=b.dataset.mtwho;MT.who=MT.who.includes(w)?MT.who.filter(x=>x!==w):MT.who.concat([w]);again()});
+ document.querySelectorAll("[data-mtb]").forEach(b=>b.onclick=()=>{const k=b.dataset.mtb;if(MT.bands.includes(k)){if(MT.bands.length===1)return alertBox("時間帯を1つ以上選んでください");MT.bands=MT.bands.filter(x=>x!==k)}else MT.bands.push(k);again()});
  document.querySelectorAll("[data-mts]").forEach(b=>b.onclick=()=>{const k=b.dataset.mts,v=b.dataset.v;MT[k]=k==="len"?+v:v;again()});
  ["mt_f","mt_t","mt_wk"].forEach(id=>{if($(id))$(id).onchange=again});
  document.querySelectorAll("[data-mk]").forEach(el=>el.onclick=()=>{const i=+el.dataset.mk;if(MT.pick.includes(i))MT.pick=MT.pick.filter(x=>x!==i);else{if(MT.pick.length>=3)return alertBox("候補は3つまでです");MT.pick.push(i)}mtKeep();const y=window.scrollY;mtForm();window.scrollTo(0,y)});
@@ -497,7 +498,7 @@ async function mtFind(){
  mtKeep();if(!MT.who.length)return alertBox("一緒に決める人を選んでください");
  const [from,to]=mtRange();if(!from||!to||to<from)return alertBox("期間を選んでください");
  MT.busy=true;$("sd").disabled=true;$("sd").textContent="さがしています…";
- try{const r=await api({op:"mtfind",who:MT.who,len:MT.len,from,to,band:MT.band,wkend:MT.wk});MT.busy=false;if(!r.ok){mtFoot();return alertBox(r.err)}
+ try{const r=await api({op:"mtfind",who:MT.who,len:MT.len,from,to,bands:MT.bands,wkend:MT.wk});MT.busy=false;if(!r.ok){mtFoot();return alertBox(r.err)}
   MT.slots=r.slots;MT.calNg=r.calNg||[];MT.pick=[];mtForm();const el=$("mt_res");if(el)window.scrollTo({top:el.getBoundingClientRect().top+window.scrollY-64,behavior:"smooth"})}
  catch(e){MT.busy=false;mtFoot();alertBox("さがせませんでした："+e.message)}
 }
