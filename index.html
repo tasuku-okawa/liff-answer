@@ -113,6 +113,11 @@ body.kb footer,body.kb .kact{display:none!important}
 @media (prefers-reduced-motion:reduce){.skc i{animation:none}}
 .mi .ti{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
 label.send2b{display:block;border:1.5px solid var(--g);border-radius:12px;padding:11px;font-size:14.5px;font-weight:700;background:#fff;color:#137333;text-align:center}
+.kf[hidden]{display:none}#k_md{margin-bottom:10px}
+.ksh{display:flex;align-items:baseline;gap:8px;margin:16px 2px 8px}.ksh:first-child{margin-top:4px}.ksh b{font-size:15px}.ksh i{font-style:normal;font-size:12px;color:var(--sub);font-weight:700}.ksh small{font-size:11.5px;color:var(--sub);margin-left:auto}
+details.ksec{margin-top:16px}details.ksec>summary{list-style:none;display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:12px 14px;cursor:pointer;margin-bottom:8px}details.ksec>summary::-webkit-details-marker{display:none}details.ksec>summary b{font-size:14.5px}details.ksec>summary i{font-style:normal;font-size:12px;color:var(--sub);font-weight:700;flex:1}details.ksec>summary .kv2{transition:transform .15s}details.ksec[open]>summary .kv2{transform:rotate(90deg)}
+.kn2{display:flex;align-items:center;gap:8px;margin-top:6px}.kn2 span{font-size:11px;font-weight:700;color:var(--gd);background:var(--gl);border-radius:6px;padding:1px 6px}.kn2 b{font-size:13.5px}
+.dl{margin-left:auto;font-size:11.5px;font-weight:900;color:#A35A00;background:#FFF1DB;border-radius:99px;padding:2px 9px;white-space:nowrap}.dl.hot{color:#C5221F;background:#FDE8E7}
 </style></head><body>
 <header id="tb" class="tb"><button id="hbk" class="tbb" hidden aria-label="戻る"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="hd">読み込み中…</div><button id="hx" class="tbb" aria-label="閉じる"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header><main id="mn"><div class="skl"><div class="skc"><i></i><i class="w6"></i><i class="w4"></i></div><div class="skc"><i></i><i class="w6"></i></div><div class="skc"><i class="w8"></i><i class="w4"></i></div></div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -632,30 +637,47 @@ function kHas(x,k){return k==="あなたの番"?x.label==="あなたの番":kOs(
 function kCls(o){if(o==="保留")return "l-done";return /^(商談前|商談中)$/.test(o)?"l-wait":/^(実施確定|実施中)$/.test(o)?"l-go":/^(実施完了|請求済み|入金済み)$/.test(o)?"l-bill":"l-done"}
 function kInfo(x){return K.cases[kCid(x)]||{}}
 function kList(){
+ if(K.mode==null){try{K.mode=localStorage.getItem("k_md")||"act"}catch(e){K.mode="act"}}
  const L=M.list||[];$("hd").textContent="案件一覧";$("ft").hidden=true;
  const cnt=k=>k==="all"?L.length:L.filter(x=>kHas(x,k)).length;
  if(!mLf||(mLf!=="all"&&!cnt(mLf)))mLf=cnt("あなたの番")?"あなたの番":cnt("商談中")?"商談中":"all";
  // k23：アプリのステータスに合わせる（0件のものは出さない）
  const F=[["あなたの番","あなたの番"]].concat(KOS.map(k=>[k,k])).filter(([k])=>k==="あなたの番"||cnt(k)).concat([["all","全部"]]);
- $("mn").innerHTML='<input id="k_q" class="inp" type="search" placeholder="🔍 件・会社・人で探す" value="'+esc(K.q)+'"><div class="filt kf" id="k_f">'+F.map(([k,v])=>'<button data-f="'+k+'" class="'+(mLf===k?"on":"")+'">'+v+' <i>'+cnt(k)+'</i></button>').join("")+'</div><div id="k_rows"></div>'+mClose();
+ $("mn").innerHTML='<input id="k_q" class="inp" type="search" placeholder="🔍 件・会社・人で探す" value="'+esc(K.q)+'"><div class="seg2" id="k_md"><button type="button" data-md="act" class="'+(K.mode!=="st"?"on":"")+'">動き順</button><button type="button" data-md="st" class="'+(K.mode==="st"?"on":"")+'">ステータス別</button></div><div class="filt kf" id="k_f"'+(K.mode==="st"?'':' hidden')+'>'+F.map(([k,v])=>'<button data-f="'+k+'" class="'+(mLf===k?"on":"")+'">'+v+' <i>'+cnt(k)+'</i></button>').join("")+'</div><div id="k_rows"></div>'+mClose();
  document.querySelectorAll("#k_f button").forEach(b=>b.onclick=()=>{mLf=b.dataset.f;K.q="";kList()});
+ document.querySelectorAll("#k_md button").forEach(b=>b.onclick=()=>{K.mode=b.dataset.md;try{localStorage.setItem("k_md",K.mode)}catch(e){}kList()});
  $("k_q").oninput=e=>{K.q=e.target.value;kRows()};
  kRows();
 }
+// k36：開いたら「動き順」。あなたの番 → 7日以内に何か → 進行中 → 返事待ち・相談中（たたむ）。保留・終わった件は出さない。［ステータス別］で今までの見方
+function kDays(nx){const m=String(nx||"").match(/(\d{1,2})\/(\d{1,2})/);if(!m)return null;const t=new Date(Date.now()+9*3600e3),y=t.getUTCFullYear(),td=Date.UTC(y,t.getUTCMonth(),t.getUTCDate());let d=Date.UTC(y,+m[1]-1,+m[2]);if(d-td<-200*864e5)d=Date.UTC(y+1,+m[1]-1,+m[2]);return Math.round((d-td)/864e5)}
+function kRow(x,L){const i=kInfo(x),st=i.stage||x.stage,nx=i.next||x.next,id=L.indexOf(x);
+  const head=String(x.head||"").replace(/^[\p{Extended_Pictographic}️‍\s]+/u,"").replace(/^\d{1,2}\/\d{1,2}（.）まで[｜|]\s*/,"");
+  const open=(x.state||[]).filter(y=>!y.a.length),me=x.label==="あなたの番",dd=kDays(nx);
+  const pill=dd==null?"":'<span class="dl'+(dd<=2?" hot":"")+'">'+(dd<0?(-dd)+"日すぎ":dd===0?"今日":dd===1?"明日":"あと"+dd+"日")+'</span>';
+  const nxt=nx?'<div class="kn2"><span>次</span><b>'+esc(nx)+'</b>'+pill+'</div>':'';
+  return '<div class="row ko kr'+(me?" me":"")+'" data-o="'+id+'"><div class="kb"></div><div class="kc"><div class="rt">'+esc(head)+'</div>'+nxt
+  +'<div class="km"><span class="lab '+kCls(kOs(x))+'">'+esc(kOs(x))+'</span>'+(st?'<span class="stg">'+esc(st)+'</span>':'')+(x.who2?'<span class="kx">'+esc(x.who2)+'</span>':'')+'</div>'
+  +(open.length?'<div class="kq">'+(me?"あと"+open.length+"問：":"答え待ち：")+esc(open.map(y=>y.q).join("・"))+'</div>':'')
+  +(me?('<button data-q="'+esc(x.qid)+'">答える（'+x.open+'問）</button>'):"")
+  +'</div><div class="kv2">›</div></div>'}
 function kRows(){
  const L=M.list||[],q=K.q.trim().toLowerCase(),PN={"江藤":"江藤 yuu","ウンパ":"村井 ウンパ","大川":"大川 tas"};
  const hit=x=>{const i=kInfo(x);const s=[x.head,x.qid,kCid(x),x.who2,i.key||""].concat((x.state||[]).map(y=>y.q+" "+(PN[y.to]||y.to||""))).join(" ").toLowerCase();return q.split(/\s+/).every(w=>s.indexOf(w)>=0)};
- const rows=(q?L.filter(hit):L.filter(x=>mLf==="all"||kHas(x,mLf))).slice().sort((a,b)=>(b.label==="あなたの番")-(a.label==="あなたの番"));
  document.querySelectorAll("#k_f button").forEach(b=>b.classList.toggle("on",!q&&mLf===b.dataset.f));
- $("k_rows").innerHTML=(q?'<div class="knote">全部から探しています（'+rows.length+'件）</div>':'')+(rows.length?rows.map(x=>{const i=kInfo(x),st=i.stage||x.stage,nx=i.next||x.next,id=L.indexOf(x);
-  const head=String(x.head||"").replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u,"");
-  const open=(x.state||[]).filter(y=>!y.a.length),me=x.label==="あなたの番";
-  const meta=[x.who2,nx].filter(Boolean).join("・");
-  return '<div class="row ko kr'+(me?" me":"")+'" data-o="'+id+'"><div class="kb"></div><div class="kc"><div class="rt">'+esc(head)+'</div>'
-  +'<div class="km"><span class="lab '+kCls(kOs(x))+'">'+esc(kOs(x))+'</span>'+(st?'<span class="stg">'+esc(st)+'</span>':'')+(meta?'<span class="kx">'+esc(meta)+'</span>':'')+'</div>'
-  +(open.length?'<div class="kq">'+(me?"あと"+open.length+"問：":"答え待ち：")+esc(open.map(y=>y.q).join("・"))+'</div>':'')
-  +(me?('<button data-q="'+esc(x.qid)+'">答える（'+x.open+'問）</button>'):"")
-  +'</div><div class="kv2">›</div></div>'}).join(""):'<div class="msg">ありません</div>');
+ const nxOf=x=>{const i=kInfo(x);return i.next||x.next},byD=(a,b)=>{const p=kDays(nxOf(a)),r=kDays(nxOf(b));return (p==null?999:p)-(r==null?999:r)};
+ let h="";
+ if(q){const rows=L.filter(hit);h='<div class="knote">全部から探しています（'+rows.length+'件）</div>'+(rows.length?rows.map(x=>kRow(x,L)).join(""):'<div class="msg">ありません</div>')}
+ else if(K.mode==="st"){const rows=L.filter(x=>mLf==="all"||kHas(x,mLf)).slice().sort((a,b)=>(b.label==="あなたの番")-(a.label==="あなたの番"));h=rows.length?rows.map(x=>kRow(x,L)).join(""):'<div class="msg">ありません</div>'}
+ else{
+  const live=L.filter(x=>!/^(保留|実施完了|請求済み|入金済み|完了|見送り)$/.test(kOs(x)));const used=new Set();
+  const take=f=>{const a=live.filter(x=>!used.has(x)&&f(x)).sort(byD);a.forEach(x=>used.add(x));return a};
+  const me=take(x=>x.label==="あなたの番"),soon=take(x=>{const d=kDays(nxOf(x));return d!=null&&d<=7}),go=take(x=>/^(実施確定|実施中)$/.test(kOs(x))),wait=take(()=>true);
+  const sec=(t,a,sub,fold)=>a.length?(fold?'<details class="ksec"><summary><b>'+t+'</b><i>'+a.length+'件</i><span class="kv2">›</span></summary>'+a.map(x=>kRow(x,L)).join("")+'</details>':'<div class="ksh"><b>'+t+'</b><i>'+a.length+'件</i>'+(sub?'<small>'+sub+'</small>':'')+'</div>'+a.map(x=>kRow(x,L)).join("")):"";
+  h=sec("あなたの番",me,"答える・出すもの")+sec("7日以内",soon,"撮影・締め切りが近い")+sec("進行中",go,"決まって動いている件")+sec("返事待ち・相談中",wait,"",true)||'<div class="msg">いま動いている件はありません</div>';
+  const rest=L.length-live.length;if(rest)h+='<div class="hint" style="margin-top:14px">保留・終わった件（'+rest+'件）は［ステータス別］で見られます</div>';
+ }
+ $("k_rows").innerHTML=h;
  document.querySelectorAll("#k_rows .row button[data-q]").forEach(b=>b.onclick=e=>{e.stopPropagation();location.href=location.pathname+"?q="+encodeURIComponent(b.dataset.q)});
  document.querySelectorAll("#k_rows .row[data-o]").forEach(el=>el.onclick=()=>{const x=L[+el.dataset.o];if(x)kOpen(kCid(x),x.qid||"")});
 }
