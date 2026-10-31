@@ -105,6 +105,7 @@ details.kd2{padding:0}details.kd2>summary{list-style:none;display:flex;align-ite
 .fm input[type=url],.fm input[type=text],.fm input[type=date],.fm input[type=time],.fm input[type=datetime-local],.fm input[type=search],.fm textarea,.fm select{border:1.5px solid var(--bd)!important;border-radius:12px!important;padding:10px 12px!important;font-size:15px!important;min-height:44px;background:#fff;width:100%}
 .lb2.tgl{display:inline-block;background:#F3E8FD;color:#8A4FD3;font-weight:700;font-size:12px;border-radius:6px;padding:3px 9px;min-width:auto}
 .tg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}.tl2{background:#fff;border-radius:16px;padding:14px 12px;display:flex;flex-direction:column;gap:10px;cursor:pointer}.tl2 .ti{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center}.tl2 b{font-size:14.5px}.tl2:active{transform:scale(.98)}
+.ssc{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px}.ssc div{background:#F4F7F5;border-radius:12px;padding:8px 10px}.ssc span{display:block;font-size:11px;color:var(--sub);font-weight:700}.ssc b{font-size:13.5px;font-variant-numeric:tabular-nums}.ssc .on{background:var(--gl);outline:1.5px solid var(--g)}.ssc .on span{color:var(--gd)}
 </style></head><body>
 <header id="tb" class="tb"><button id="hbk" class="tbb" hidden aria-label="戻る"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="hd">読み込み中…</div><button id="hx" class="tbb" aria-label="閉じる"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -549,9 +550,10 @@ function uDraw(){
   const wd=String(o.when||"").slice(0,10),wm=wd===uDay(0)?"今日":wd===uDay(1)?"明日":wd?"日付を選ぶ":"";
   h+='<div class="fm"><div class="lb" style="margin-top:0">何稿？</div>'+uSeg("stage",["初稿","修正稿","完成"],o.stage)+'<div class="lb">動画のリンク</div>'+urls("もう1本","ドライブなどの URL")+'</div>';
   h+='<div class="fm"><div class="lb" style="margin-top:0">投稿文（キャプション）</div>'+uTa("caption",o.caption,"なければ空でOK",3)+'<div class="lb">サムネ（あれば）</div>'+uIn("thumb",o.thumb,"url","サムネの URL")+'</div>';
-  h+='<div class="fm"><div class="lb" style="margin-top:0">投稿したい日</div>'+'<div class="seg2">'+["今日","明日","日付を選ぶ"].map(v=>'<button type="button" data-uwhen="'+v+'" class="'+(wm===v?"on":"")+'">'+v+'</button>').join("")+'</div>'
-   +(wm?'<div class="row2">'+uIn("when",o.when,"datetime-local")+'</div>':'')
-   +'<div class="lb">時間の基準</div>'+uSeg("tz",["日本時間","いる場所の時間"],o.tz)+'<div class="lb">急ぎ</div>'+uSeg("rush",["ふつう","今日中","1時間以内"],o.rush)+'</div>';
+  // k31：投稿日は本人が決めない（先方の全体スケジュールに従う）。選んだ件の先方のスケジュールを見せるだけ
+  const cs=(U.cs||[]).find(c=>c.id===U.cid),sc=(cs&&cs.sched)||[],hi=o.stage==="修正稿"?"修正稿":o.stage==="完成"?"投稿":"初稿";
+  h+='<div class="fm"><div class="lb" style="margin-top:0">先方のスケジュール</div>'+(sc.length?'<div class="ssc">'+sc.map(q=>'<div class="'+(q[0]===hi?"on":"")+'"><span>'+esc(q[0])+'</span><b>'+esc(q[1])+'</b></div>').join("")+'</div>':'<div class="kx" style="line-height:1.6">'+(U.cid?'この件のスケジュールはまだ入っていません。大川さんが先方に確かめます':'件を選ぶと、先方から出ているスケジュールが出ます')+'</div>')
+   +'<div class="lb">急ぎ</div>'+uSeg("rush",["ふつう","今日中","1時間以内"],o.rush)+'</div>';
  }else if(k==="plan"){
   h+='<div class="fm"><div class="lb" style="margin-top:0">企画・構成案（貼りつけ）</div>'+uTa("text",o.text,"企画の文",6)+'<div class="lb">ファイル・リンク</div>'+urls("もう1つ","URL（ドライブ・ドキュメントなど）")+'</div>';
  }else{
