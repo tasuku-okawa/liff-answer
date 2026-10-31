@@ -1,0 +1,29 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gmail で開く</title>
+<style>
+:root{--g:#06C755;--gd:#05A549;--ink:#1B2A22;--sub:#5E6E64;--bg:#EEF2EE}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;padding:24px 16px}
+.box{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px}
+small{display:block;font-size:12px;color:var(--sub);margin-bottom:4px}
+b.s{font-size:15px;line-height:1.5;word-break:break-all}
+button,a.btn{display:block;width:100%;border:0;border-radius:14px;padding:15px;font-size:16px;font-weight:700;text-align:center;text-decoration:none;font-family:inherit;cursor:pointer}
+button{background:var(--g);color:#fff}
+a.btn{background:#fff;color:#0a66c2;border:1.5px solid #DDE5DF;margin-top:10px;font-size:14.5px}
+.hint{font-size:13px;color:var(--sub);line-height:1.7;margin:12px 2px 0}
+.ok{display:none;background:#E3F7EC;color:var(--gd);font-weight:700;border-radius:12px;padding:10px 12px;margin-bottom:12px;font-size:13.5px}
+</style></head><body>
+<div class="box"><small>メールの件名</small><b class="s" id="s"></b></div>
+<div class="ok" id="ok">件名をコピーしました。Gmail の検索に貼りつけてください</div>
+<button id="go">件名をコピーして Gmail アプリを開く</button>
+<a class="btn" id="web" href="#">うまく開かないとき：ブラウザで開く</a>
+<p class="hint">Gmail アプリは、ウンパ用（unparunpa@）のアカウントに切り替えてから検索してください。</p>
+<script>
+const P=new URLSearchParams(location.search),s=P.get("s")||"",th=P.get("th")||"",u=P.get("u")||"unparunpa@oasiz.org";
+document.getElementById("s").textContent=s||"（件名なし）";
+document.getElementById("web").href="https://mail.google.com/mail/u/"+encodeURIComponent(u)+"/#all/"+encodeURIComponent(th);
+document.getElementById("go").onclick=async()=>{
+ try{await navigator.clipboard.writeText(s);document.getElementById("ok").style.display="block"}catch(e){
+  try{const t=document.createElement("textarea");t.value=s;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove();document.getElementById("ok").style.display="block"}catch(e2){}}
+ setTimeout(()=>{location.href="googlegmail://"},150);
+};
+</script>
+</body></html>
