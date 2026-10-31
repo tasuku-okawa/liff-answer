@@ -118,6 +118,7 @@ label.send2b{display:block;border:1.5px solid var(--g);border-radius:12px;paddin
 details.ksec{margin-top:16px}details.ksec>summary{list-style:none;display:flex;align-items:center;gap:8px;background:#fff;border-radius:14px;padding:12px 14px;cursor:pointer;margin-bottom:8px}details.ksec>summary::-webkit-details-marker{display:none}details.ksec>summary b{font-size:14.5px}details.ksec>summary i{font-style:normal;font-size:12px;color:var(--sub);font-weight:700;flex:1}details.ksec>summary .kv2{transition:transform .15s}details.ksec[open]>summary .kv2{transform:rotate(90deg)}
 .kn2{display:flex;align-items:center;gap:8px;margin-top:6px}.kn2 span{font-size:11px;font-weight:700;color:var(--gd);background:var(--gl);border-radius:6px;padding:1px 6px}.kn2 b{font-size:13.5px}
 .dl{margin-left:auto;font-size:11.5px;font-weight:900;color:#A35A00;background:#FFF1DB;border-radius:99px;padding:2px 9px;white-space:nowrap}.dl.hot{color:#C5221F;background:#FDE8E7}
+.kb2{display:flex;align-items:center;gap:8px;margin-top:6px}.kb2 span{font-size:12px;font-weight:900;border-radius:6px;padding:2px 8px}.kb2.me span{background:var(--gl);color:var(--gd)}.kb2.you span{background:#FFF1DB;color:#A35A00}.kb2 i{font-style:normal;font-size:12px;color:var(--sub);font-weight:700}
 </style></head><body>
 <header id="tb" class="tb"><button id="hbk" class="tbb" hidden aria-label="戻る"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="hd">読み込み中…</div><button id="hx" class="tbb" aria-label="閉じる"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header><main id="mn"><div class="skl"><div class="skc"><i></i><i class="w6"></i><i class="w4"></i></div><div class="skc"><i></i><i class="w6"></i></div><div class="skc"><i class="w8"></i><i class="w4"></i></div></div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -657,11 +658,13 @@ function kRow(x,L){const i=kInfo(x),st=i.stage||x.stage,nx=i.next||x.next,id=L.i
   const head=String(x.head||"").replace(/^[\p{Extended_Pictographic}️‍\s]+/u,"").replace(/^\d{1,2}\/\d{1,2}（.）まで[｜|]\s*/,"");
   const open=(x.state||[]).filter(y=>!y.a.length),me=x.label==="あなたの番",dd=kDays(nx);
   const pill=dd==null?"":'<span class="dl'+(dd<=2?" hot":"")+'">'+(dd<0?(-dd)+"日すぎ":dd===0?"今日":dd===1?"明日":"あと"+dd+"日")+'</span>';
-  const nxt=nx?'<div class="kn2"><span>次</span><b>'+esc(nx)+'</b>'+pill+'</div>':'';
+  const talk=/^(商談前|商談中)$/.test(kOs(x)),bl=x.ball,idl=kIdle(x);
+  let nxt=nx&&(!talk||/回答期限|やること/.test(nx))?'<div class="kn2"><span>次</span><b>'+esc(nx)+'</b>'+pill+'</div>':'';
+  if(talk&&bl&&x.label!=="あなたの番")nxt='<div class="kb2 '+(bl.who==="こちら"?"me":"you")+'"><span>'+(bl.who==="こちら"?"こちらの番":"先方の返事待ち")+'</span>'+(idl!=null?'<i>'+(idl===0?"今日":idl+"日")+'</i>':'')+'</div><div class="kq" style="margin-top:4px">'+esc(bl.what)+'</div>'+(nx&&/回答期限/.test(nx)?'<div class="kn2"><span>次</span><b>'+esc(nx)+'</b>'+pill+'</div>':'');
   return '<div class="row ko kr'+(me?" me":"")+'" data-o="'+id+'"><div class="kb"></div><div class="kc"><div class="rt">'+esc(head)+'</div>'+nxt
   +'<div class="km"><span class="lab '+kCls(kOs(x))+'">'+esc(kOs(x))+'</span>'+(st?'<span class="stg">'+esc(st)+'</span>':'')+(x.who2?'<span class="kx">'+esc(x.who2)+'</span>':'')+'</div>'
   +(open.length?'<div class="kq">'+(me?"あと"+open.length+"問：":"答え待ち：")+esc(open.map(y=>y.q).join("・"))+'</div>':'')
-  +(kStop(x)?'<div class="kq">'+(x.last?'最後の動き '+(+x.last.slice(5,7))+'/'+(+x.last.slice(8,10))+'（'+kIdle(x)+'日前）':'動きの記録なし')+'</div>':'')
+  +(kStop(x)&&!(talk&&bl)?'<div class="kq">'+(x.last?'最後の動き '+(+x.last.slice(5,7))+'/'+(+x.last.slice(8,10))+'（'+kIdle(x)+'日前）':'動きの記録なし')+'</div>':'')
   +(me?('<button data-q="'+esc(x.qid)+'">答える（'+x.open+'問）</button>'):"")
   +'</div><div class="kv2">›</div></div>'}
 function kRows(){
@@ -675,18 +678,23 @@ function kRows(){
   // k37：ステータスの中も、あなたの番 → 次の予定が近い順。次の予定が決まっていない件は下にたたむ
   const rows=L.filter(x=>mLf==="all"||kHas(x,mLf)),me=rows.filter(x=>x.label==="あなたの番").sort(byD),rest=rows.filter(x=>x.label!=="あなたの番");
   const stop=rest.filter(x=>kStop(x)&&!((d=>d!=null&&d<=7)(kDays(nxOf(x))))).sort((a,b)=>(kIdle(a)??9999)-(kIdle(b)??9999)),mv=rest.filter(x=>stop.indexOf(x)<0);
-  const dated=mv.filter(x=>kDays(nxOf(x))!=null).sort(byD),none=mv.filter(x=>kDays(nxOf(x))==null);
+  const isTalk=/^(商談前|商談中)$/.test(mLf),byI=(a,b)=>(kIdle(b)??-1)-(kIdle(a)??-1);
+  const myB=isTalk?mv.filter(x=>x.ball&&x.ball.who==="こちら").sort(byI):[],yoB=isTalk?mv.filter(x=>x.ball&&x.ball.who==="先方").sort(byI):[];
+  const mv2=mv.filter(x=>myB.indexOf(x)<0&&yoB.indexOf(x)<0);
+  const dated=mv2.filter(x=>kDays(nxOf(x))!=null).sort(byD),none=mv2.filter(x=>kDays(nxOf(x))==null);
   h=(me.length?'<div class="ksh"><b>あなたの番</b><i>'+me.length+'件</i></div>'+me.map(x=>kRow(x,L)).join(""):"")
-   +(dated.length?'<div class="ksh"><b>次の予定が近い順</b><i>'+dated.length+'件</i></div>'+dated.map(x=>kRow(x,L)).join(""):"")
+   +(myB.length?'<div class="ksh"><b>こちらボール</b><i>'+myB.length+'件</i><small>返す・決める・出す</small></div>'+myB.map(x=>kRow(x,L)).join(""):"")
+   +(yoB.length?'<div class="ksh"><b>先方ボール</b><i>'+yoB.length+'件</i><small>返事待ち（長い順）</small></div>'+yoB.map(x=>kRow(x,L)).join(""):"")
+   +(dated.length?'<div class="ksh"><b>'+(isTalk?"そのほか（予定の近い順）":"次の予定が近い順")+'</b><i>'+dated.length+'件</i></div>'+dated.map(x=>kRow(x,L)).join(""):"")
    +(none.length?'<div class="ksh"><b>次の予定はまだ</b><i>'+none.length+'件</i></div>'+none.map(x=>kRow(x,L)).join(""):"")
    +(stop.length?'<details class="ksec"><summary><b>止まっている件</b><i>'+stop.length+'件・2週間以上動きなし</i><span class="kv2">›</span></summary>'+stop.map(x=>kRow(x,L)).join("")+'</details>':"")
    ||'<div class="msg">ありません</div>'}
  else{
   const live=L.filter(x=>!/^(保留|実施完了|請求済み|入金済み|完了|見送り)$/.test(kOs(x)));const used=new Set();
   const take=f=>{const a=live.filter(x=>!used.has(x)&&f(x)).sort(byD);a.forEach(x=>used.add(x));return a};
-  const me=take(x=>x.label==="あなたの番"),soon=take(x=>{const d=kDays(nxOf(x));return d!=null&&d<=7}),go=take(x=>/^(実施確定|実施中)$/.test(kOs(x))),wait=take(x=>!kStop(x)),stop=take(()=>true);
+  const me=take(x=>x.label==="あなたの番"),soon=take(x=>{const d=kDays(nxOf(x));return d!=null&&d<=7}),go=take(x=>/^(実施確定|実施中)$/.test(kOs(x))),myb=take(x=>!kStop(x)&&x.ball&&x.ball.who==="こちら"),wait=take(x=>!kStop(x)),stop=take(()=>true);
   const sec=(t,a,sub,fold)=>a.length?(fold?'<details class="ksec"><summary><b>'+t+'</b><i>'+a.length+'件</i><span class="kv2">›</span></summary>'+a.map(x=>kRow(x,L)).join("")+'</details>':'<div class="ksh"><b>'+t+'</b><i>'+a.length+'件</i>'+(sub?'<small>'+sub+'</small>':'')+'</div>'+a.map(x=>kRow(x,L)).join("")):"";
-  h=sec("あなたの番",me,"答える・出すもの")+sec("7日以内",soon,"撮影・締め切りが近い")+sec("進行中",go,"決まって動いている件")+sec("返事待ち・相談中",wait,"",true)+sec("止まっている件（2週間以上動きなし）",stop,"",true)||'<div class="msg">いま動いている件はありません</div>';
+  h=sec("あなたの番",me,"答える・出すもの")+sec("7日以内",soon,"撮影・締め切りが近い")+sec("進行中",go,"決まって動いている件")+sec("こちらボールの商談",myb,"返す・決める")+sec("先方待ち・相談中",wait,"",true)+sec("止まっている件（2週間以上動きなし）",stop,"",true)||'<div class="msg">いま動いている件はありません</div>';
   const rest=L.length-live.length;if(rest)h+='<div class="hint" style="margin-top:14px">保留・終わった件（'+rest+'件）は［ステータス別］で見られます</div>';
  }
  $("k_rows").innerHTML=h;
