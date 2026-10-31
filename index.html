@@ -131,6 +131,8 @@ details.ksec{margin-top:16px}details.ksec>summary{list-style:none;display:flex;a
 .ox{display:flex;gap:6px;flex:0 0 auto}.ox button{width:46px;height:40px;border-radius:11px;border:1.5px solid #DDE5DF;background:#fff;font-size:18px;font-weight:800;color:#9AA59E}.ox button.o.on{background:var(--g);border-color:var(--g);color:#fff}.ox button.x.on{background:#D93025;border-color:#D93025;color:#fff}
 .who3{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}.who3 span{font-size:11.5px;border-radius:999px;padding:1px 8px;background:#EEF1F5;color:#5E6E64}.who3 span.o{background:#E3F7EC;color:var(--gd)}.who3 span.x{background:#FDE8E7;color:#C5221F}
 .fixd{background:#E3F7EC;border:1.5px solid var(--g);border-radius:14px;padding:12px 14px;margin-bottom:10px}.fixd b{display:block;font-size:17px;margin-top:2px}
+.bgw{position:relative;border-radius:14px;overflow:hidden;border:1.5px solid #E3E9E5;background:#F6F8F6}.bgw canvas{display:block;width:100%;touch-action:none}.bgt{display:flex;gap:8px;margin-top:8px}.bgt button{flex:1;border:1.5px solid #DDE5DF;background:#fff;border-radius:11px;height:38px;font:inherit;font-size:13px;font-weight:700;color:var(--ink)}.bgt button.on{border-color:#D93025;color:#D93025}
+.bgpick{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;height:150px;border:2px dashed #C9D3CC;border-radius:14px;color:var(--sub);font-weight:700;font-size:14px;background:#fff;cursor:pointer}
 </style></head><body>
 <header id="tb" class="tb"><button id="hbk" class="tbb" hidden aria-label="戻る"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="hd">読み込み中…</div><button id="hx" class="tbb" aria-label="閉じる"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header><main id="mn"><div class="skl"><div class="skc"><i></i><i class="w6"></i><i class="w4"></i></div><div class="skc"><i></i><i class="w6"></i></div><div class="skc"><i class="w8"></i><i class="w4"></i></div></div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -545,6 +547,41 @@ async function mtAns(){
  catch(e){$("sd").disabled=false;alertBox("送れませんでした："+e.message)}
 }
 
+
+/* k63：不具合を報告。スクショを選んで指でなぞる（赤い線）＋ひとこと → 記録して、トークにも1行残す */
+let BG=null;
+function bugOpen(where){BG={where:where||"",text:"",img:null,lines:[],busy:false,rid:Math.random().toString(36).slice(2)};bugDraw()}
+function bugDraw(){
+ $("hd").textContent="不具合を報告";
+ let h='<div class="bk" id="bg_bk">← 戻る</div>';
+ h+='<div class="fm"><div class="lb" style="margin-top:0">どこが、どうダメ？（ひとことでOK）</div><textarea id="bg_t" style="margin-top:0;min-height:72px" placeholder="例：提出するを押しても何も起きない">'+esc(BG.text)+'</textarea></div>';
+ h+='<div class="fm"><div class="lb" style="margin-top:0">スクショ（なくてもOK）</div>'+(BG.img?'<div class="bgw"><canvas id="bg_c"></canvas></div><div class="hint" style="text-align:left;margin:6px 2px 0">おかしい所を指でなぞってください（赤い線）</div><div class="bgt"><button id="bg_u">ひとつ戻す</button><button id="bg_r">選び直す</button></div>':'<label class="bgpick"><span style="font-size:26px">📷</span>スクショを選ぶ<input id="bg_f" type="file" accept="image/*" hidden></label>')+'</div>';
+ h+='<div style="height:80px"></div>';
+ $("mn").innerHTML=h;
+ $("bg_bk").onclick=()=>{$("ft").hidden=true;if(BG.where==="手配・相談")rTop();else history.length>1?history.back():rTop()};
+ $("bg_t").oninput=e=>{BG.text=e.target.value;bugFoot()};
+ if($("bg_f"))$("bg_f").onchange=e=>{const fl=e.target.files&&e.target.files[0];if(!fl)return;const im=new Image();im.onload=()=>{BG.img=im;BG.lines=[];bugDraw()};im.src=URL.createObjectURL(fl)};
+ if(BG.img){
+  const c=$("bg_c"),W=Math.min(900,BG.img.naturalWidth),H=Math.round(BG.img.naturalHeight*W/BG.img.naturalWidth);c.width=W;c.height=H;
+  const ctx=c.getContext("2d");const paint=()=>{ctx.drawImage(BG.img,0,0,W,H);ctx.strokeStyle="#E8241B";ctx.lineWidth=Math.max(5,W/90);ctx.lineCap="round";ctx.lineJoin="round";BG.lines.forEach(l=>{if(l.length<2){if(l[0]){ctx.beginPath();ctx.arc(l[0][0],l[0][1],ctx.lineWidth,0,7);ctx.fillStyle="#E8241B";ctx.fill()}return}ctx.beginPath();ctx.moveTo(l[0][0],l[0][1]);l.slice(1).forEach(p=>ctx.lineTo(p[0],p[1]));ctx.stroke()})};paint();
+  const pt=e=>{const b=c.getBoundingClientRect();return [(e.clientX-b.left)*W/b.width,(e.clientY-b.top)*H/b.height]};
+  let cur=null;c.onpointerdown=e=>{c.setPointerCapture(e.pointerId);cur=[pt(e)];BG.lines.push(cur);paint()};c.onpointermove=e=>{if(!cur)return;cur.push(pt(e));paint()};c.onpointerup=c.onpointercancel=()=>{cur=null};
+  $("bg_u").onclick=()=>{BG.lines.pop();paint()};$("bg_r").onclick=()=>{BG.img=null;BG.lines=[];bugDraw()};
+ }
+ bugFoot();
+}
+function bugFoot(){$("ft").hidden=false;$("sd").disabled=BG.busy||!(BG.text.trim()||BG.img);$("sd").textContent="送る";$("hn").textContent="こちらで受けて直します。直したらトークでお知らせします";$("sd").onclick=bugSend}
+async function bugSend(){
+ BG.busy=true;$("sd").disabled=true;$("sd").textContent="送っています…";
+ try{
+  const img=BG.img?$("bg_c").toDataURL("image/jpeg",0.72):"";
+  const r=await api({op:"bugsave",text:BG.text,img,where:BG.where,rid:BG.rid});BG.busy=false;
+  if(!r.ok){bugFoot();return alertBox(r.err)}
+  try{if(liff.isInClient&&liff.isInClient()&&liff.getContext&&liff.getContext()&&/utou|group|room/.test(liff.getContext().type))await liff.sendMessages([{type:"text",text:"🛠 不具合を報告しました（"+r.id+"）\n"+(BG.text.trim()||"スクショだけ")+(BG.img?"（スクショあり）":"")}])}catch(e){}
+  $("ft").hidden=true;$("mn").innerHTML='<div class="box ok">✅ 受け付けました（'+esc(r.id)+'）<div class="s" style="margin-top:6px;font-weight:400">ありがとうございます。直したら、トークでお知らせします</div></div>'+(liff.isInClient&&liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">トークに戻る</button>':'');
+ }catch(e){BG.busy=false;bugFoot();alertBox("送れませんでした："+e.message)}
+}
+
 /* k18：［大川さんへ］手配（文字を減らす・件と乗る人は検索）＋乗る人の台帳 */
 let R={k:"",o:{},pay:"",cid:"",cname:"",memo:"",cs:[],last:{},who:"",test:false,busy:false,rid:"",pax:[],q:"",pq:""};
 const RK={fly:"航空券を頼む",stay:"宿を頼む",move:"移動を頼む",other:"その他の手配"};
@@ -552,8 +589,9 @@ const RNM={"大川":"大川佑","江藤":"江藤","ウンパ":"村井亮介"};
 async function rTop(){
  $("hd").textContent="手配・相談";$("ft").hidden=true;
  const g=(ic,t,id)=>'<div class="tl2" id="'+id+'">'+ic+'<b>'+t+'</b></div>';
- $("mn").innerHTML='<div class="tg2">'+g('<div class="ti" style="background:#E8F0FE;color:#2F6FDB"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>',"航空券","r_fly")+g('<div class="ti" style="background:#F3E8FD;color:#8A4FD3"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V8M21 20v-6a3 3 0 0 0-3-3H10v9M3 14h18"/><circle cx="6.5" cy="11" r="1.5"/></svg></div>',"宿","r_stay")+g('<div class="ti" style="background:#E3F7EC;color:#05A549"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4M16 21l-2-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/></svg></div>',"移動","r_move")+g('<div class="ti" style="background:#FFF1DB;color:#D9822B"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>',"その他の手配","r_other")+'</div><div class="mi" id="r_ask"><div class="ti" style="background:#EEF1F5;color:#5E6E64"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg></div><div class="tx"><b>相談・質問</b><span style="display:block;font-size:12px;color:#888;font-weight:400">このトークに、そのまま書いてください</span></div></div><div class="dtw">頼んだもの</div><div id="r_list" class="lst">…</div>';
+ $("mn").innerHTML='<div class="tg2">'+g('<div class="ti" style="background:#E8F0FE;color:#2F6FDB"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>',"航空券","r_fly")+g('<div class="ti" style="background:#F3E8FD;color:#8A4FD3"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V8M21 20v-6a3 3 0 0 0-3-3H10v9M3 14h18"/><circle cx="6.5" cy="11" r="1.5"/></svg></div>',"宿","r_stay")+g('<div class="ti" style="background:#E3F7EC;color:#05A549"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4M16 21l-2-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/></svg></div>',"移動","r_move")+g('<div class="ti" style="background:#FFF1DB;color:#D9822B"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>',"その他の手配","r_other")+'</div><div class="mi" id="r_ask"><div class="ti" style="background:#EEF1F5;color:#5E6E64"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg></div><div class="tx"><b>相談・質問</b><span style="display:block;font-size:12px;color:#888;font-weight:400">このトークに、そのまま書いてください</span></div></div><div class="mi" id="r_bug"><div class="ti" style="background:#FDE8E7;color:#C5221F"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2l1.9 1.9M16 2l-1.9 1.9M9 7.1V6a3 3 0 0 1 6 0v1.1"/><path d="M12 20c-3.3 0-6-2.7-6-6v-3a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v3c0 3.3-2.7 6-6 6zM12 20v-9M6.5 9C4.6 8.8 3 7.1 3 5M6 13H2M3 21c0-2.1 1.7-3.9 3.8-4M20.97 5c0 2.1-1.6 3.8-3.5 4M22 13h-4M17.2 17c2.1.1 3.8 1.9 3.8 4"/></svg></div><div class="tx"><b>不具合を報告</b><span style="display:block;font-size:12px;color:#888;font-weight:400">スクショをなぞって、ひとことで</span></div></div><div class="dtw">頼んだもの</div><div id="r_list" class="lst">…</div>';
  ["fly","stay","move","other"].forEach(k=>$("r_"+k).onclick=()=>rForm(k));
+ $("r_bug").onclick=()=>bugOpen("手配・相談");
  // k25：相談・質問は画面を開かず、トークに直接書く（画面は遅いので）
  $("r_ask").onclick=()=>{try{if(liff.isInClient&&liff.isInClient())return liff.closeWindow()}catch(e){}$("ft").hidden=true;$("mn").innerHTML='<div class="box"><b>💬 このトークに、そのまま書いてください</b><div class="s" style="margin-top:6px;line-height:1.7">・「？」で終わる質問は、大川（AI）が先に答えます。分からないときは大川さんに回ります<br>・件名（例：花王 フットクリーム）を入れると、どの件か分かりやすくなります<br>・相談・お願いは、大川さんが読んで返します</div></div>'+(liff.isInClient&&liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">トークに戻る</button>':'')+'<div class="bk" style="margin-top:12px" onclick="rTop()">← 戻る</div>'};
  const rl=r=>{if(!$("r_list"))return;$("r_list").innerHTML=r.ok&&r.list.length?r.list.map(x=>'<div class="box" style="padding:9px 11px;margin-bottom:6px"><span class="st">'+esc(x.st)+'</span><b>'+esc(x.kind)+'</b> '+esc(x.name||"")+'<div style="white-space:pre-wrap;color:#555;font-size:12px;margin-top:3px">'+esc(x.text)+'</div></div>').join(""):'<div class="hint" style="text-align:left">まだありません</div>'};
@@ -938,6 +976,7 @@ function fxDraw(){
   if(V==="sub")return uSub(); // 提出する（3つを足した入口。前の sSub は残す）
   if(V==="sch")return sSch();
   if(V==="mt")return mtOpen(P.get("id")||""); // k59：3人の日程調整に○×
+  if(V==="bug")return bugOpen(P.get("w")||""); // k63：不具合を報告
   if(V==="to")return rTop();
   if(!qid&&V==="list")return kStart(); // k44b：案件一覧（探す窓・件の詳しい画面）
   if(!qid&&(V==="todo"||V==="list"))return mStart(V);
