@@ -109,8 +109,11 @@ details.kd2{padding:0}details.kd2>summary{list-style:none;display:flex;align-ite
 /* k32：文字を打つ間（キーボードが出ている間）は下に固定のボタンを隠す。横に揺れないように */
 html,body{overflow-x:hidden}
 body.kb footer,body.kb .kact{display:none!important}
+.skc{background:#fff;border-radius:16px;padding:16px 14px;margin-bottom:10px;display:grid;gap:10px}.skc i{display:block;height:12px;border-radius:6px;background:linear-gradient(90deg,#E6ECE8 25%,#F3F6F4 50%,#E6ECE8 75%);background-size:200% 100%;animation:skm 1.2s ease-in-out infinite}.skc i.w8{width:80%}.skc i.w6{width:60%}.skc i.w4{width:40%}@keyframes skm{from{background-position:200% 0}to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){.skc i{animation:none}}
+.mi .ti{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex:none}
 </style></head><body>
-<header id="tb" class="tb"><button id="hbk" class="tbb" hidden aria-label="戻る"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="hd">読み込み中…</div><button id="hx" class="tbb" aria-label="閉じる"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
+<header id="tb" class="tb"><button id="hbk" class="tbb" hidden aria-label="戻る"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="hd">読み込み中…</div><button id="hx" class="tbb" aria-label="閉じる"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header><main id="mn"><div class="skl"><div class="skc"><i></i><i class="w6"></i><i class="w4"></i></div><div class="skc"><i></i><i class="w6"></i></div><div class="skc"><i class="w8"></i><i class="w4"></i></div></div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 <script>
 const LIFF_ID="2012262067-htwZvG1K";
@@ -402,8 +405,8 @@ const RK={fly:"航空券を頼む",stay:"宿を頼む",move:"移動を頼む",ot
 const RNM={"大川":"大川佑","江藤":"江藤","ウンパ":"村井亮介"};
 async function rTop(){
  $("hd").textContent="手配・相談";$("ft").hidden=true;
- const g=(ic,t,id)=>'<div class="rg" id="'+id+'"><div style="font-size:26px">'+ic+'</div><b>'+t+'</b></div>';
- $("mn").innerHTML='<div class="rgw">'+g("✈️","航空券","r_fly")+g("🏨","宿","r_stay")+g("🚄","移動","r_move")+g("✏️","その他の手配","r_other")+'</div><div class="mi" id="r_ask"><div class="ic">💬</div><div class="tx"><b>相談・質問</b><span style="display:block;font-size:12px;color:#888;font-weight:400">このトークに、そのまま書いてください</span></div></div><div class="dtw">頼んだもの</div><div id="r_list" class="lst">…</div>';
+ const g=(ic,t,id)=>'<div class="tl2" id="'+id+'">'+ic+'<b>'+t+'</b></div>';
+ $("mn").innerHTML='<div class="tg2">'+g('<div class="ti" style="background:#E8F0FE;color:#2F6FDB"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2L16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg></div>',"航空券","r_fly")+g('<div class="ti" style="background:#F3E8FD;color:#8A4FD3"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 20V8M21 20v-6a3 3 0 0 0-3-3H10v9M3 14h18"/><circle cx="6.5" cy="11" r="1.5"/></svg></div>',"宿","r_stay")+g('<div class="ti" style="background:#E3F7EC;color:#05A549"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="14" rx="3"/><path d="M5 11h14M8 21l2-4M16 21l-2-4"/><circle cx="9" cy="14" r=".5"/><circle cx="15" cy="14" r=".5"/></svg></div>',"移動","r_move")+g('<div class="ti" style="background:#FFF1DB;color:#D9822B"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"/></svg></div>',"その他の手配","r_other")+'</div><div class="mi" id="r_ask"><div class="ti" style="background:#EEF1F5;color:#5E6E64"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg></div><div class="tx"><b>相談・質問</b><span style="display:block;font-size:12px;color:#888;font-weight:400">このトークに、そのまま書いてください</span></div></div><div class="dtw">頼んだもの</div><div id="r_list" class="lst">…</div>';
  ["fly","stay","move","other"].forEach(k=>$("r_"+k).onclick=()=>rForm(k));
  // k25：相談・質問は画面を開かず、トークに直接書く（画面は遅いので）
  $("r_ask").onclick=()=>{$("ft").hidden=true;$("mn").innerHTML='<div class="box"><b>💬 このトークに、そのまま書いてください</b><div class="s" style="margin-top:6px;line-height:1.7">・「？」で終わる質問は、大川（AI）が先に答えます。分からないときは大川さんに回ります<br>・件名（例：花王 フットクリーム）を入れると、どの件か分かりやすくなります<br>・相談・お願いは、大川さんが読んで返します</div></div>'+(liff.isInClient&&liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">トークに戻る</button>':'')+'<div class="bk" style="margin-top:12px" onclick="rTop()">← 戻る</div>'};
@@ -523,7 +526,7 @@ async function uSub(pre){
 }
 function uDrawSub(wait){
  const it=(ic,t,id)=>'<div class="mi" id="'+id+'"><div class="ic">'+ic+'</div><div class="tx"><b>'+t+'</b></div></div>';
- const spin='<div class="msg" style="padding:12px"><div class="spin"></div></div>';
+ const spin='<div class="skc" style="margin:0"><i></i><i class="w6"></i></div>';
  let h=(U.test?'<div class="tst">【テスト】</div>':'');
  if(!wait&&U.turn.length)h+='<div class="dtw">出す番（大川さんから「直して」）</div>'+U.turn.map((x,i)=>'<a class="ak" data-t="'+i+'"><b>'+esc(x.kind.split(" ")[0])+' '+esc(x.name||x.cid)+' '+esc(x.round||"")+'</b><span>'+esc(String(x.reply||"直して").split("\n")[0].slice(0,40))+'</span></a>').join("");
  h+='<div class="tg2"><div class="tl2" id="u_mov"><div class="ti" style="background:#E3F7EC;color:#05A549"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="M16 10l5-3v10l-5-3"/></svg></div><b>動画の確認</b></div><div class="tl2" id="u_plan"><div class="ti" style="background:#E8F0FE;color:#2F6FDB"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></div><b>企画・構成案</b></div><div class="tl2" id="u_post"><div class="ti" style="background:#FFF1DB;color:#D9822B"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></div><b>投稿・インサイト</b></div><div class="tl2" id="u_exp"><div class="ti" style="background:#F3E8FD;color:#8A4FD3"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v18l3-2 2 2 2-2 2 2 2-2 3 2V3l-3 2-2-2-2 2-2-2-2 2z"/><path d="M9 9h6M9 13h6"/></svg></div><b>経費（レシート）</b></div></div>';
@@ -605,7 +608,7 @@ async function uSend(){
 let K={cases:{},q2c:{},q:"",d:null};
 (function(){const s=document.createElement("style");s.textContent='.kv{display:grid;grid-template-columns:7.4em 1fr;gap:4px 10px;font-size:13px;line-height:1.55}.kv b{color:#666;font-weight:400}.kv .un{color:#aaa}.kd{font-weight:700;font-size:12.5px;margin:10px 0 4px}.ki{font-size:13px;line-height:1.55;padding:6px 0;border-top:1px solid #f0f1f3}.ki:first-child{border-top:0}.ki a{color:#0a66c2;word-break:break-all}.ki details summary{font-weight:400;color:#0a66c2;font-size:12px}.ki .s{font-size:12px;margin-top:4px}.kn{font-size:13px;line-height:1.6}.row.ko{cursor:pointer}.row .op{float:right;color:#999;font-weight:400}.knote{font-size:12px;color:#666;margin:0 2px 8px}';document.head.appendChild(s)})();
 async function kStart(){
- $("hd").textContent="案件一覧";$("ft").hidden=true;$("mn").innerHTML='<div class="msg"><div class="spin"></div></div>';
+ $("hd").textContent="案件一覧";$("ft").hidden=true;$("mn").innerHTML='<div class="skl"><div class="skc"><i></i><i class="w6"></i><i class="w4"></i></div><div class="skc"><i></i><i class="w6"></i></div><div class="skc"><i class="w8"></i><i class="w4"></i></div></div>';
  const kre=()=>{if($("k_rows")&&!K.q)kList()};
  try{const [r,c]=await Promise.all([apiC({op:"list"},r=>{M=r;kre()}),apiC({op:"kcases"},c=>{K.cases=c.cases||{};K.q2c=c.q2c||{};kre()}).catch(()=>({ok:false}))]);
  if(!r.ok)return err(r.err);M=r;if(c&&c.ok){K.cases=c.cases||{};K.q2c=c.q2c||{}}
@@ -646,7 +649,7 @@ function kRows(){
  document.querySelectorAll("#k_rows .row[data-o]").forEach(el=>el.onclick=()=>{const x=L[+el.dataset.o];if(x)kOpen(kCid(x),x.qid||"")});
 }
 async function kOpen(cid,q){
- $("ft").hidden=true;$("mn").innerHTML='<div class="msg"><div class="spin"></div></div>';window.scrollTo(0,0);
+ $("ft").hidden=true;$("mn").innerHTML='<div class="skl"><div class="skc"><i></i><i class="w6"></i><i class="w4"></i></div><div class="skc"><i></i><i class="w6"></i></div><div class="skc"><i class="w8"></i><i class="w4"></i></div></div>';window.scrollTo(0,0);
  try{const r=await api({op:"kcase",c:cid,q:q});if(!r.ok){$("mn").innerHTML='<div class="bk" id="k_bk">← 一覧</div><div class="msg">'+esc(r.err)+'</div>';$("k_bk").onclick=kList;return}K.d=r;kDraw()}catch(e){err("開けませんでした："+e.message)}
 }
 function kKv(rows){return '<div class="kv">'+(rows||[]).map(p=>'<b>'+esc(p[0])+'</b><span'+(p[1]==="未定"?' class="un"':'')+'>'+esc(p[1])+'</span>').join("")+'</div>'}
@@ -693,7 +696,7 @@ function fxDraw(){
  const old=mn.querySelector("#fx");if(old)old.remove();const ot=mn.querySelector("#fxtop");if(ot)ot.remove();
  const cb=mn.querySelector(".closeb");
  const box=document.createElement("div");box.id="fx";
- if(!FX){box.innerHTML='<div class="msg">やること・知らせを読み込み中…</div>';mn.appendChild(box);return}
+ if(!FX){box.innerHTML='<div class="ch">やること</div><div class="skc"><i></i><i class="w6"></i><i class="w8"></i></div>';mn.appendChild(box);return}
  if(!FX.ok){box.innerHTML='<div class="msg">やること・知らせを読めませんでした（'+esc(FX.err||"")+'）</div>';mn.appendChild(box);return}
  const other=FX.test&&FX.as!==FX.who;
  $("hd").textContent=(FX.test?"【試し】":"")+"確認する";
@@ -709,7 +712,7 @@ function fxDraw(){
  }else top.innerHTML+='<div class="ch" id="fx_q">答える</div>';
  mn.prepend(top);
  // やること
- const ic={tk:"📝",sub:"✏️",arr:"✈️"};
+ const ic={tk:"",sub:"",arr:""};
  let h='<div class="ch" id="fx_t">やること（'+FX.todo.length+(FX.more?"＋":"")+'）</div>';
  if(!FX.todo.length)h+='<div class="msg">いまやることはありません</div>';
  else{h+='<div class="box">';let was=null;
