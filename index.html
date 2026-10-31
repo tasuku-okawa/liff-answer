@@ -106,6 +106,9 @@ details.kd2{padding:0}details.kd2>summary{list-style:none;display:flex;align-ite
 .lb2.tgl{display:inline-block;background:#F3E8FD;color:#8A4FD3;font-weight:700;font-size:12px;border-radius:6px;padding:3px 9px;min-width:auto}
 .tg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px}.tl2{background:#fff;border-radius:16px;padding:14px 12px;display:flex;flex-direction:column;gap:10px;cursor:pointer}.tl2 .ti{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center}.tl2 b{font-size:14.5px}.tl2:active{transform:scale(.98)}
 .ssc{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px}.ssc div{background:#F4F7F5;border-radius:12px;padding:8px 10px}.ssc span{display:block;font-size:11px;color:var(--sub);font-weight:700}.ssc b{font-size:13.5px;font-variant-numeric:tabular-nums}.ssc .on{background:var(--gl);outline:1.5px solid var(--g)}.ssc .on span{color:var(--gd)}
+/* k32：文字を打つ間（キーボードが出ている間）は下に固定のボタンを隠す。横に揺れないように */
+html,body{overflow-x:hidden}
+body.kb footer,body.kb .kact{display:none!important}
 </style></head><body>
 <header id="tb" class="tb"><button id="hbk" class="tbb" hidden aria-label="戻る"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button><div id="hd">読み込み中…</div><button id="hx" class="tbb" aria-label="閉じる"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header><main id="mn"><div class="msg">読み込み中…</div></main><footer id="ft" hidden><button class="send" id="sd" disabled>送信</button><div class="hint" id="hn"></div></footer>
 <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -126,6 +129,9 @@ const AT={"江藤":"@Yuu","ウンパ":"@村井亮介","大川":"@Tas"};
  document.readyState==="loading"?document.addEventListener("DOMContentLoaded",go):go();
  const hx=()=>{const b=$("hx");if(!b)return setTimeout(hx,50);b.onclick=()=>{try{if(liff.isInClient&&liff.isInClient())return liff.closeWindow()}catch(e){}history.length>1?history.back():window.close()}};hx();
 })();
+(function(){let t=0;const isIn=e=>e&&e.matches&&e.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,select');
+ document.addEventListener("focusin",e=>{if(isIn(e.target)){clearTimeout(t);document.body.classList.add("kb")}});
+ document.addEventListener("focusout",e=>{if(isIn(e.target)){clearTimeout(t);t=setTimeout(()=>{if(!isIn(document.activeElement))document.body.classList.remove("kb")},120)}});})();
 function err(m){$("hd").textContent="答える";$("mn").innerHTML='<div class="msg">'+esc(m)+'</div>';$("ft").hidden=true}
 async function api(o){const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(Object.assign({idToken:liff.getIDToken(),q:qid},o))});return r.json()}
 /* k26：読むだけの画面は、前に開いたときの中身をすぐ出し、新しい中身が届いたら差し替える（届くまでに何か押したら差し替えない） */
