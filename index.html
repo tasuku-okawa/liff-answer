@@ -154,7 +154,7 @@ function mPicked(){return Object.keys(Object.assign({},mSel,mNote)).filter(k=>mS
 function mUpd(){const n=mPicked().length;$("sd").disabled=!n||mBusy;$("sd").textContent=mBusy?"送っています…":n?n+"問 送る":"答えを選んでください"}
 function mShown(c){return c.qs.filter(q=>{if(c.open.indexOf(q.k)>=0)return true;if(!q.when)return false;const p=c.qs.find(y=>y.q===q.when.q);if(!p||c.open.indexOf(p.k)<0)return false;return (mSel[c.qid+"|"+p.k]||"").indexOf(q.when.v)===0})}
 function mTodo(){
- const cs=M.cases||[];$("hd").textContent="まだ答えていない問い（"+cs.length+"件）";
+ const cs=M.cases||[];$("hd").textContent="確認する";
  if(!cs.length){$("mn").innerHTML='<div class="box ok">まだ答えていない問いはありません</div><div class="msg">大川から聞きたいことが来たら、このトークにカードが届きます</div>'+mClose();$("ft").hidden=true;return}
  let h="",total=0,got=0;
  cs.forEach(c=>{
@@ -356,7 +356,7 @@ let R={k:"",o:{},pay:"",cid:"",cname:"",memo:"",cs:[],last:{},who:"",test:false,
 const RK={fly:"✈️ 航空券",stay:"🏨 宿",move:"🚄 移動",other:"✏️ その他の手配"};
 const RNM={"大川":"大川佑","江藤":"江藤","ウンパ":"村井亮介"};
 async function rTop(){
- $("hd").textContent="大川さんへ";$("ft").hidden=true;
+ $("hd").textContent="手配・相談";$("ft").hidden=true;
  const g=(ic,t,id)=>'<div class="rg" id="'+id+'"><div style="font-size:26px">'+ic+'</div><b>'+t+'</b></div>';
  $("mn").innerHTML='<div class="rgw">'+g("✈️","航空券","r_fly")+g("🏨","宿","r_stay")+g("🚄","移動","r_move")+g("✏️","その他の手配","r_other")+'</div><div class="mi" id="r_ask"><div class="ic">💬</div><div class="tx"><b>相談・質問</b><span style="display:block;font-size:12px;color:#888;font-weight:400">このトークに、そのまま書いてください</span></div></div><div class="dtw">頼んだもの</div><div id="r_list" class="lst">…</div>';
  ["fly","stay","move","other"].forEach(k=>$("r_"+k).onclick=()=>rForm(k));
@@ -626,7 +626,7 @@ function fxDraw(){
  if(!FX){box.innerHTML='<div class="msg">やること・知らせを読み込み中…</div>';mn.appendChild(box);return}
  if(!FX.ok){box.innerHTML='<div class="msg">やること・知らせを読めませんでした（'+esc(FX.err||"")+'）</div>';mn.appendChild(box);return}
  const other=FX.test&&FX.as!==FX.who;
- $("hd").textContent=(FX.test?"【試し】":"")+"大川さんから";
+ $("hd").textContent=(FX.test?"【試し】":"")+"確認する";
  // 上：数（答える＋今日までのやること）と、試しの切り替え（大川さんだけ）
  const top=document.createElement("div");top.id="fxtop";
  let t="";
