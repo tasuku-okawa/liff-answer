@@ -163,8 +163,10 @@ function logErr(m){m=String(m||"").slice(0,400);if(!m||/ResizeObserver|Script er
  try{const tk=window.liff&&liff.getIDToken&&liff.getIDToken();if(!tk)return;fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify({idToken:tk,op:"clierr",where:(($("hd")||{}).textContent||"").slice(0,40),msg:m,ua:navigator.userAgent})}).catch(()=>{})}catch(e){}}
 window.addEventListener("error",e=>logErr((e.message||"エラー")+(e.filename?" @"+String(e.filename).split("/").pop()+":"+e.lineno:"")));
 window.addEventListener("unhandledrejection",e=>logErr("処理の失敗："+((e.reason&&e.reason.message)||e.reason)));
-function err(m){if(/つまずき|開けませんでした|読めませんでした|通信/.test(String(m)))logErr("画面に出たエラー："+m);$("hd").textContent="答える";$("mn").innerHTML='<div class="msg">'+esc(m)+'</div>';$("ft").hidden=true}
-async function api(o){let j;try{const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(Object.assign({idToken:liff.getIDToken(),q:qid},o))});j=await r.json()}catch(e){if(o.op!=="clierr")logErr("通信の失敗："+e.message+"（"+(o.op||"答え")+"）");throw e}if(j&&j.ok===false&&/^つまずきました/.test(String(j.err||"")))logErr("受け口："+j.err+"（"+(o.op||"答え")+"）");return j}
+function err(m){if(/つまずき|開けませんでした|読めませんでした|通信/.test(String(m)))logErr("画面に出たエラー："+m);$("hd").textContent="TAS公式";const fr=/友だち/.test(String(m));
+ // k47：止まったときは次にすることを出す（友だちでないときは友だち追加のボタン）
+ $("mn").innerHTML='<div class="msg">'+esc(m)+'</div>'+(fr&&window.ADDU?'<a class="send" style="display:block;text-align:center;text-decoration:none;margin-top:12px" href="'+esc(window.ADDU)+'">TAS公式と友だちになる</a>':'<div class="kx" style="text-align:center;margin-top:10px;line-height:1.7">もう一度開いてみてください。<br>だめなら、トークに「動かない」と送ってください</div>');$("ft").hidden=true}
+async function api(o){let j;try{const r=await fetch(API,{method:"POST",headers:{"Content-Type":"text/plain"},body:JSON.stringify(Object.assign({idToken:liff.getIDToken(),q:qid},o))});j=await r.json()}catch(e){if(o.op!=="clierr")logErr("通信の失敗："+e.message+"（"+(o.op||"答え")+"）");throw e}if(j&&j.add)window.ADDU=j.add;if(j&&j.ok===false&&/^つまずきました/.test(String(j.err||"")))logErr("受け口："+j.err+"（"+(o.op||"答え")+"）");return j}
 /* k26：読むだけの画面は、前に開いたときの中身をすぐ出し、新しい中身が届いたら差し替える（届くまでに何か押したら差し替えない） */
 let NAV=0;document.addEventListener("click",()=>{NAV++},true);
 function cKey(o){return "c1|"+o.op+"|"+(o.q!=null?o.q:qid)+"|"+(o.as||"")+"|"+(o.id||"")}
