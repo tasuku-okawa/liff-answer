@@ -406,8 +406,8 @@ function sDraw(){
  let h=(r.test?'<div class="tst">【テスト・それぞれ自分の予定が見える】</div>':'');
  if(!NGM)h+=mtBox(r);
  if(!NGM&&r.ask.length)h+='<div class="box sask"><b>日程の確認が'+r.ask.length+'件</b>'+r.ask.map(a=>'<a href="?v=dt&id='+encodeURIComponent(a.id)+'"><span>'+esc(a.name)+'<small>'+esc(a.day)+(a.cand?'（出られる日を選ぶ）':'（大丈夫？）')+'</small></span><i>›</i></a>').join("")+'</div>';
- h+='<div class="seg2"><button id="s_v" class="'+(NGM?"":"on")+'">予定を見る</button><button id="s_ng" class="'+(NGM?"on":"")+'">NGの日を入れる</button></div>';
- if(NGM)h+='<div class="hint" style="text-align:left;margin:0 2px 8px">日を押すたびに 終日 → 午前 → 午後 → なし</div>';
+ // k45：NG はGoogle カレンダーに一本化（大川さん 11/1 21:30「その日の予定が見えないと NG しづらい・カレンダーを見てやっている」）。日を押すと その日の予定＋［Google カレンダーで入れる］
+ h+='<div class="hint" style="text-align:left;margin:0 2px 8px">日を押すと、その日の予定と［Google カレンダーで入れる］が出ます。NG や予定はカレンダーに入れれば、空き探しに効きます</div>';
  if(!r.calOk)h+='<div class="hint" style="text-align:left">カレンダーは読めませんでした（アプリの予定だけ）</div>';
  // ひとつのカレンダーに続けて並べる（月が変わるところに月の名前）
  let cg='<div class="box scal"><div class="cal">'+[...W].map((w,k)=>'<div class="w'+(k===0?" sun":k===6?" sat":"")+'">'+w+'</div>').join(""),pm="";
@@ -419,11 +419,9 @@ function sDraw(){
  if(!NGM){const ev=r.days.filter(x=>x.items.some(t=>t.tag!=="NG"));
   h+='<div class="box sev">'+(ev.length?ev.map(x=>'<div class="ev" id="ev_'+x.d.replace(/\//g,"")+'"><div class="dd'+(x.wd==="土"?" sat":x.wd==="日"?" sun":"")+'">'+x.md+'<small>'+x.wd+'</small></div><div class="tt">'+x.items.map((t,j)=>t.tag==="NG"?"":'<div class="evi" data-ei="'+r.days.indexOf(x)+'_'+j+'"><span class="tm">'+esc(t.t||"終日")+'</span> '+(t.tag?'<span class="kx">［'+esc(t.tag)+'］</span>':'')+esc(t.what||"予定")+(t.cid||t.where||t.memo||t.gb?'<i class="evc">›</i>':'')+'</div>').join("")+'</div></div>').join(""):'<div class="kx">この先の予定はありません</div>')+'</div>'}
  $("mn").innerHTML=h;
- $("s_ng").onclick=()=>{if(NGM)return;NGM=true;sDraw();sFoot()};
- $("s_v").onclick=()=>{if(!NGM)return;NGM=false;NG=Object.assign({},SC.ng||{});$("ft").hidden=true;sDraw()};
  document.querySelectorAll(".scal .d[data-d]").forEach(el=>el.onclick=()=>{const d=el.dataset.d;
   if(NGM){const k=NS.indexOf(NG[d]||"");const v=NS[(k+1)%4];if(v)NG[d]=v;else delete NG[d];sDraw();sFoot();return}
-  const t=$("ev_"+d.replace(/\//g,""));if(t)window.scrollTo({top:t.getBoundingClientRect().top+window.scrollY-70,behavior:"smooth"})});
+  const day=SC.days.find(x=>x.d===d);if(day)dayOpen(day)});
  document.querySelectorAll(".evi[data-ei]").forEach(el=>el.onclick=()=>{const [a,b]=el.dataset.ei.split("_").map(Number);const day=SC.days[a];if(day&&day.items[b])evOpen(day,day.items[b])});
  if($("mt_new"))$("mt_new").onclick=()=>mtNew();
  document.querySelectorAll("[data-mt]").forEach(el=>el.onclick=()=>mtOpen(el.dataset.mt));
@@ -433,6 +431,21 @@ function sFoot(){const n=Object.keys(NG).length;$("ft").hidden=false;$("sd").dis
 async function sNgSend(){$("sd").disabled=true;try{const r=await api({op:"ngsave",days:NG});if(!r.ok){$("sd").disabled=false;return alertBox(r.err)}SC.ng=r.ng;NG=Object.assign({},r.ng);NGM=false;$("ft").hidden=true;sDraw();alertBox("✅ NG の日を送りました（足した "+r.add+"・外した "+r.del+"）")}catch(e){$("sd").disabled=false;alertBox("送れませんでした："+e.message)}}
 
 /* k59：スケジュールの予定を押すと中身（場所・現場・メモ・件）が下から出る */
+/* k45：日の中身（その日の予定）＋［Google カレンダーで入れる］［NG を入れる］ */
+function gcalUrl(d,title){const a=d.replace(/\//g,""),t=new Date(d.replace(/\//g,"-")+"T00:00:00Z");t.setUTCDate(t.getUTCDate()+1);const b=t.toISOString().slice(0,10).replace(/-/g,"");return "https://calendar.google.com/calendar/r/eventedit?dates="+a+"/"+b+(title?"&text="+encodeURIComponent(title):"")}
+function openOut(u){try{if(window.liff&&liff.openWindow){liff.openWindow({url:u,external:true});return}}catch(e){}window.open(u,"_blank")}
+function dayOpen(day){
+ const its=day.items.filter(t=>t.tag!=="NG"),ng=day.items.filter(t=>t.tag==="NG");
+ let h='<div class="gr"></div><div class="sw">'+esc(day.md+"（"+day.wd+"）")+'</div>';
+ h+='<div style="margin-top:10px">'+(its.length?its.map((t,j)=>'<div class="srow evd" data-j="'+j+'" style="cursor:pointer"><b>'+esc(t.t||"終日")+'</b><span>'+(t.tag?'<span class="kx">［'+esc(t.tag)+'］</span>':'')+esc(t.what||"予定")+(t.cid||t.where||t.memo||t.gb?' ›':'')+'</span></div>').join(""):'<div class="kx">この日の予定はありません</div>')+(ng.length?'<div class="kx" style="margin-top:6px;color:#C5221F">🚫 '+esc(ng.map(t=>t.t||"終日").join("・"))+' NG（前に入れた分）</div>':'')+'</div>';
+ h+='<button class="send" id="dy_g" style="margin-top:12px">Google カレンダーで予定を入れる</button>';
+ h+='<button class="send2b" id="dy_n" style="margin-top:8px;width:100%">この日を NG にする（カレンダーに「NG」）</button>';
+ h+='<button class="send2b" id="dy_x" style="margin-top:8px;width:100%">閉じる</button>';
+ const bg=document.createElement("div");bg.className="shb";bg.innerHTML='<div class="sht">'+h+'</div>';document.body.appendChild(bg);
+ const close=()=>bg.remove();bg.onclick=e=>{if(e.target===bg)close()};$("dy_x").onclick=close;
+ $("dy_g").onclick=()=>openOut(gcalUrl(day.d,""));$("dy_n").onclick=()=>openOut(gcalUrl(day.d,"NG"));
+ bg.querySelectorAll(".evd").forEach(el=>el.onclick=()=>{const it=its[+el.dataset.j];if(it){close();evOpen(day,it)}});
+}
 function evOpen(day,it){
  const rows=[];
  if(it.where)rows.push(["場所",'<a href="https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(it.where)+'" target="_blank">'+esc(it.where)+'</a>']);
