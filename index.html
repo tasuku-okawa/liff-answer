@@ -427,6 +427,7 @@ function sDraw(){
  document.querySelectorAll(".evi[data-ei]").forEach(el=>el.onclick=()=>{const [a,b]=el.dataset.ei.split("_").map(Number);const day=SC.days[a];if(day&&day.items[b])evOpen(day,day.items[b])});
  if($("mt_new"))$("mt_new").onclick=()=>mtNew();
  document.querySelectorAll("[data-mt]").forEach(el=>el.onclick=()=>mtOpen(el.dataset.mt));
+ document.querySelectorAll("[data-mtx]").forEach(b=>b.onclick=async e=>{e.stopPropagation();if(!b.dataset.sure){b.dataset.sure="1";b.textContent="もう一度押すとやめます";return}b.disabled=true;b.textContent="やめています…";const x=await api({op:"mtstop",id:b.dataset.mtx});if(!x.ok)return alertBox(x.err);const row=b.closest(".mtr");if(row)row.remove();}); // 一覧から、始めた人（と大川さん）がやめる
 }
 function sFoot(){const n=Object.keys(NG).length;$("ft").hidden=false;$("sd").disabled=false;$("sd").textContent="NG の日を送る（"+n+"日）";$("hn").textContent="大川さんに伝わり、日程の確認や定例の空きにも効きます";$("sd").onclick=sNgSend}
 async function sNgSend(){$("sd").disabled=true;try{const r=await api({op:"ngsave",days:NG});if(!r.ok){$("sd").disabled=false;return alertBox(r.err)}SC.ng=r.ng;NG=Object.assign({},r.ng);NGM=false;$("ft").hidden=true;sDraw();alertBox("✅ NG の日を送りました（足した "+r.add+"・外した "+r.del+"）")}catch(e){$("sd").disabled=false;alertBox("送れませんでした："+e.message)}}
@@ -459,7 +460,8 @@ function mtBox(r){
  h+=L.map(x=>{
   const lab=x.st==="決まり"?'<span class="st s-g">決まり</span>':x.st==="合わない"?'<span class="st s-o">合わない</span>':x.need?'<span class="st s-p">あなたの番</span>':'<span class="st">返事待ち</span>';
   const sub=x.st==="決まり"?x.fixed:x.st==="合わない"?"みんなが○の枠がありません":x.need?"候補 "+x.n+"つに○×をつける":"まだ："+x.wait.join("・");
-  return '<div class="mtr" data-mt="'+esc(x.id)+'"><div><b>'+esc(x.what)+'</b><small>'+esc(sub)+'（'+esc(x.by)+'から）</small></div>'+lab+'</div>'}).join("");
+  const me=(SC&&SC.who)||"大川",canStop=x.st==="聞いている"&&(me==="大川"||x.by===MTN[me]);
+  return '<div class="mtr" data-mt="'+esc(x.id)+'"><div><b>'+esc(x.what)+'</b><small>'+esc(sub)+'（'+esc(x.by)+'から）</small></div>'+lab+(canStop?'<button class="mtx" data-mtx="'+esc(x.id)+'" style="margin-left:6px;border:1px solid #e3b4b0;background:#fff;color:#C5221F;border-radius:8px;padding:3px 8px;font-size:12px">やめる</button>':'')+'</div>'}).join("");
  if(!L.length)h+='<div class="kx" style="margin-top:6px;font-size:12.5px;line-height:1.6">空いている枠をアプリが探して、ほかの人に○×で聞きます</div>';
  return h+'</div>';
 }
@@ -526,7 +528,7 @@ function mtDraw(){
  const r=MO,can=!!r.as&&r.st==="聞いている";
  let h='<div class="bk" id="mo_bk">← スケジュール</div>';
  if(r.test)h+='<div class="as"><span class="cnt" style="margin:4px 0">試しに：</span>'+r.who.map(w=>'<button data-mas="'+w+'" class="'+(r.as===w?"on":"")+'">'+MTN[w]+'</button>').join("")+'</div>';
- h+='<div class="box"><div style="font-size:12.5px;color:var(--sub);font-weight:700">🤝 '+esc(r.by)+'から・'+mtLen(r.len)+'</div><div style="font-size:18px;font-weight:800;margin-top:2px">'+esc(r.what)+'</div><div class="who3">'+r.who.map(w=>'<span>'+MTN[w]+'</span>').join("")+'</div></div>';
+ h+='<div class="box">'+(r.mine&&r.st==="聞いている"?'<button id="mo_stop" style="float:right;border:1px solid #e3b4b0;background:#fff;color:#C5221F;border-radius:8px;padding:4px 10px;font-size:12.5px">やめる</button>':'')+'<div style="font-size:12.5px;color:var(--sub);font-weight:700">🤝 '+esc(r.by)+'から・'+mtLen(r.len)+'</div><div style="font-size:18px;font-weight:800;margin-top:2px">'+esc(r.what)+'</div><div class="who3">'+r.who.map(w=>'<span>'+MTN[w]+'</span>').join("")+'</div></div>';
  if(r.st==="決まり")h+='<div class="fixd"><span style="font-size:12px;font-weight:800;color:var(--gd)">✅ 決まりました</span><b>'+esc(r.fixed)+'</b>'+(r.test?'<div class="kx" style="margin-top:4px">試しなのでカレンダーには入れていません</div>':'')+'</div>';
  if(r.st==="合わない")h+='<div class="box" style="border-color:#f3b8b4;background:#fde8e7;color:#c5221f;font-weight:700">みんなが○の枠がありませんでした。［＋ 日程を決める］から別の候補で聞き直してください</div>';
  if(r.st==="やめ")h+='<div class="box" style="color:#888;font-weight:700">この日程調整はやめました</div>';
@@ -536,13 +538,12 @@ function mtDraw(){
   +(r.as?(c.clash.length?'<small class="cl">⚠️ 重なる予定：'+esc(c.clash.join("／"))+'</small>':'<small>その日の予定：'+esc(c.day.length?c.day.join("／"):"なし")+'</small>'):'')
   +'<div class="who3">'+c.all.map(a=>'<span class="'+(a.v==="○"?"o":a.v==="×"?"x":"")+'">'+esc(a.who)+' '+(a.v||"まだ")+'</span>').join("")+'</div></div>'
   +(can?'<div class="ox"><button class="o'+(v==="○"?" on":"")+'" data-ok="'+c.k+'" data-v="○">○</button><button class="x'+(v==="×"?" on":"")+'" data-ok="'+c.k+'" data-v="×">×</button></div>':'')+'</div>'});
- if(r.mine&&r.st==="聞いている")h+='<div class="bk" id="mo_stop" style="margin-top:10px;color:#C5221F">この日程調整をやめる</div>';
  h+='<div style="height:80px"></div>';
  $("mn").innerHTML=h;
  $("mo_bk").onclick=()=>{$("ft").hidden=true;sSch()};
  document.querySelectorAll("[data-mas]").forEach(b=>b.onclick=()=>mtOpen(r.id,b.dataset.mas));
  document.querySelectorAll("[data-ok]").forEach(b=>b.onclick=()=>{const k=b.dataset.ok;MO.sel[k]=MO.sel[k]===b.dataset.v?"":b.dataset.v;if(!MO.sel[k])delete MO.sel[k];const y=window.scrollY;mtDraw();window.scrollTo(0,y)});
- if($("mo_stop"))$("mo_stop").onclick=async e=>{const el=e.target;if(!el.dataset.sure){el.dataset.sure="1";el.textContent="もう一度押すと、やめます";return}const x=await api({op:"mtstop",id:r.id});if(!x.ok)return alertBox(x.err);MO=Object.assign(x,{sel:{}});mtDraw()};
+ if($("mo_stop"))$("mo_stop").onclick=async e=>{const el=e.target;if(!el.dataset.sure){el.dataset.sure="1";el.textContent="もう一度押すとやめます";return}el.disabled=true;el.textContent="やめています…";const x=await api({op:"mtstop",id:r.id});if(!x.ok)return alertBox(x.err);MO=Object.assign(x,{sel:{}});mtDraw()};
  if(can){const n=Object.keys(MO.sel).length,all=r.cands.length;$("ft").hidden=false;$("sd").disabled=n<all;$("sd").textContent=n<all?"あと"+(all-n)+"つ ○か×を":"答えを送る";$("hn").textContent=(r.test&&r.as!=="大川"?"【試し】"+MTN[r.as]+"として答えます。":"")+"みんなが○の枠があれば、そこで決まります";$("sd").onclick=mtAns}
  else $("ft").hidden=true;
 }
