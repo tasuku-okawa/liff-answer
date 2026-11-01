@@ -209,9 +209,10 @@ $("sd").onclick=async()=>{
   if(r.doneText)text=r.doneText;
   else if(ctx.type==="utou")text=(D.short||D.head||"")+"\n"+answers.map(a=>{const q=D.qs.find(x=>x.k===a.k);return (q?(q.label||q.q):"")+"："+a.v+(a.note?"（"+a.note+"）":"")}).join("\n");
   let sent=false;if(text&&liff.isInClient()){try{await liff.sendMessages([{type:"text",text:text.slice(0,4900)}]);sent=true}catch(e){}}
+  const nx=((D.summary||[]).map(c=>c.next).find(Boolean)||"").replace(/^大川が/,"大川さんが"); // k46：答えたあとに、次に誰が何をするか
   D=r;$("ft").hidden=true;
-  $("mn").innerHTML='<div class="box ok">送信しました</div><div class="box"><div class="t">いまの状況</div><div class="s">'+r.state.map(x=>(x.a.length?"✅ ":"⬜ ")+esc(x.q)+(x.a.length?"："+esc(x.a.map(a=>a.v+"（"+a.who+"）").join("／")):"")).join("\n")+'</div></div>'
-   +'<div class="msg">'+(r.done?"全部そろいました。"+(sent?"トークにまとめを出しました":""):"ほかの人の答えを待っています（トークには何も出ていません）")+'</div>'
+  $("mn").innerHTML='<div class="box ok">✅ 受け取りました</div><div class="box"><div class="t">いまの状況</div><div class="s">'+r.state.map(x=>(x.a.length?"✅ ":"⬜ ")+esc(x.q)+(x.a.length?"："+esc(x.a.map(a=>a.v+"（"+a.who+"）").join("／")):"")).join("\n")+'</div></div>'
+   +'<div class="msg">'+(r.done?"全部そろいました。"+(nx?"このあと："+esc(nx):"このあと大川さんが進めます")+(sent?"（トークにまとめを出しました）":""):"ほかの人の答えを待っています。そろったら"+(nx?"、"+esc(nx):"、大川さんが進めます")+"（そろうとトークにまとめが出ます）")+'</div>'
    +(liff.isInClient()?'<button class="send" onclick="liff.closeWindow()">閉じる</button>':"");
  }catch(e){err("送れませんでした："+e.message)}
 };
@@ -224,7 +225,9 @@ function mPicked(){return Object.keys(Object.assign({},mSel,mNote)).filter(k=>mS
 function mUpd(){const n=mPicked().length;$("sd").disabled=!n||mBusy;$("sd").textContent=mBusy?"送っています…":n?n+"問 送る":"答えを選んでください"}
 function mShown(c){return c.qs.filter(q=>{if(c.open.indexOf(q.k)>=0)return true;if(!q.when)return false;const p=c.qs.find(y=>y.q===q.when.q);if(!p||c.open.indexOf(p.k)<0)return false;return (mSel[c.qid+"|"+p.k]||"").indexOf(q.when.v)===0})}
 function mTodo(){
- const cs=M.cases||[];$("hd").textContent="確認する";
+ // k46：締め切りが近い順（見出しの「🚨M/d」）。2件以上ならいちばん上に「まずこれ」
+ const dueOf=c=>{const m=String(c.head||"").match(/🚨\s*(\d{1,2})\/(\d{1,2})/);if(!m)return 99999;const now=new Date(),cm=now.getMonth()+1;let y=now.getFullYear();if(+m[1]<cm-6)y++;return y*10000+(+m[1])*100+(+m[2])};
+ const cs=(M.cases||[]).slice().sort((a,b)=>dueOf(a)-dueOf(b));$("hd").textContent="確認する";
  if(!cs.length){$("mn").innerHTML='<div class="box ok">まだ答えていない問いはありません</div><div class="msg">大川から聞きたいことが来たら、このトークにカードが届きます</div>'+mClose();$("ft").hidden=true;return}
  let h="",total=0,got=0;
  cs.forEach(c=>{
@@ -233,9 +236,10 @@ function mTodo(){
   const sm=mSum(c.summary),lk=(c.summary||[]).find(x=>x.link);
   // k28：件の概要はたたむ（「件の詳しく」で開く）。件名は問いの箱の上に
   const sumH=(sm||lk)?'<details class="sum"><summary>件の詳しく ›</summary>'+(sm?'<div class="s" style="margin-top:6px">'+sm+'</div>':"")+(lk?'<a class="lk" href="'+esc(lk.link)+'" target="_blank">この案件の詳細・履歴</a>':"")+'</details>':"";
-  qs.forEach(q=>{const key=c.qid+"|"+q.k;total++;if(mSel[key]||mNote[key])got++;
+  const first=cs.length>1&&c===cs[0];
+  qs.forEach((q,qi)=>{const key=c.qid+"|"+q.k;total++;if(mSel[key]||mNote[key])got++;
    const bg=((q.text?esc(q.text)+"\n":"")+rowsHtml(q.rows)).trim(),st=mStOf(c.state,q.q);
-   h+='<div class="box"><div class="qh"><span>'+esc(String(c.head).replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u,""))+'</span></div><div class="qq">'+esc(q.q)+'</div>'+(bg?'<div class="s">'+bg+'</div>':"")+'<div class="chips">'+q.btns.map(b=>'<button class="chip'+(mSel[key]===b?" on":"")+'" data-mk="'+key+'" data-v="'+esc(b)+'">'+esc(b)+'</button>').join("")+'</div>'
+   h+='<div class="box"'+(first&&qi===0?' style="border:2px solid #06C755"':'')+'>'+(first&&qi===0?'<div style="font-size:12px;font-weight:800;color:#06C755;margin-bottom:4px">👉 まずこれ（締め切りがいちばん近い）</div>':'')+'<div class="qh"><span>'+esc(String(c.head).replace(/^[\p{Extended_Pictographic}\uFE0F\u200D\s]+/u,""))+'</span></div><div class="qq">'+esc(q.q)+'</div>'+(bg?'<div class="s">'+bg+'</div>':"")+'<div class="chips">'+q.btns.map(b=>'<button class="chip'+(mSel[key]===b?" on":"")+'" data-mk="'+key+'" data-v="'+esc(b)+'">'+esc(b)+'</button>').join("")+'</div>'
     +'<textarea placeholder="ひとこと（任意）" data-mn="'+key+'">'+esc(mNote[key]||"")+'</textarea>'+(st?'<div class="st">いまの答え：'+esc(st)+'</div>':"")+(q===qs[qs.length-1]?sumH:"")+'</div>'});
  });
  $("mn").innerHTML=(total>1?'<div class="cnt">'+total+'問中 '+got+'問</div><div class="prog"><b style="width:'+(total?got/total*100:0)+'%"></b></div>':'')+h;
