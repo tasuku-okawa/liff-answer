@@ -503,7 +503,7 @@ function mtForm(){
   h+='<div class="ch" id="mt_res">空いている枠（'+MT.slots.length+'）</div>';
   if(MT.calNg&&MT.calNg.length)h+='<div class="hint" style="text-align:left;margin:0 2px 8px">'+esc(MT.calNg.join("・"))+'のカレンダーは読めませんでした（アプリの予定だけで探しています）</div>';
   if(!MT.slots.length)h+='<div class="msg">みんなが空いている枠が見つかりませんでした。期間か時間帯を広げてください</div>';
-  else h+='<div class="hint" style="text-align:left;margin:0 2px 8px">聞きたい枠を3つまで選んでください（前後30分はあけています）</div>'+MT.slots.map((x,i)=>{const on=MT.pick.includes(i);return '<div class="mc'+(on?" on":"")+'" data-mk="'+i+'"><span class="ck3">'+(on?"✓":"")+'</span><div class="ml"><b>'+esc(x.lab)+'</b><small>その日のあなたの予定：'+esc(x.my.length?x.my.join("／"):"なし")+'</small></div></div>'}).join("");
+  else h+='<div class="hint" style="text-align:left;margin:0 2px 8px">聞きたい枠を3つまで選んでください（前後30分はあけています。△はだれかのカレンダーに終日の予定がある日）</div>'+MT.slots.map((x,i)=>{const on=MT.pick.includes(i);return '<div class="mc'+(on?" on":"")+'" data-mk="'+i+'"><span class="ck3">'+(on?"✓":"")+'</span><div class="ml"><b>'+(x.warn&&x.warn.length?"△ ":"")+esc(x.lab)+'</b>'+(x.warn&&x.warn.length?'<small style="color:#B26A00">△ '+esc(x.warn.join("／"))+'（終日の予定。本当に埋まっているか見てください）</small>':'')+'<small>その日のあなたの予定：'+esc(x.my.length?x.my.join("／"):"なし")+'</small></div></div>'}).join("");
  }
  h+='<div style="height:80px"></div>';
  $("mn").innerHTML=h;
@@ -534,7 +534,7 @@ async function mtFind(){
 async function mtSend(){
  mtKeep();if(!MT.what.trim()){window.scrollTo(0,0);return alertBox("何の予定かを入れてください")}
  MT.busy=true;$("sd").disabled=true;
- try{const r=await api({op:"mtmake",what:MT.what,len:MT.len,who:MT.who,cands:MT.pick.map(i=>({d:MT.slots[i].d,s:MT.slots[i].s})),rid:MT.rid});MT.busy=false;if(!r.ok){mtFoot();return alertBox(r.err)}
+ try{const r=await api({op:"mtmake",what:MT.what,len:MT.len,who:MT.who,cands:MT.pick.map(i=>({d:MT.slots[i].d,s:MT.slots[i].s,warn:MT.slots[i].warn||[]})),rid:MT.rid});MT.busy=false;if(!r.ok){mtFoot();return alertBox(r.err)}
   $("ft").hidden=true;$("mn").innerHTML='<div class="box ok">✅ '+esc(MT.who.map(w=>MTN[w]).join("・"))+'に聞きました<br><b>'+esc(MT.what)+'</b><div class="s" style="margin-top:6px;font-weight:400">'+MT.pick.map(i=>esc(MT.slots[i].lab)).join("<br>")+'</div>'+(r.test?'<div class="tst" style="margin-top:8px">【テスト】知らせは大川さんの1対1にだけ届きます</div>':'')+'</div><button class="send" id="mt_go">答えの様子を見る</button><div class="bk" id="mt_bk2" style="margin-top:12px">← スケジュール</div>';
   $("mt_go").onclick=()=>mtOpen(r.id);$("mt_bk2").onclick=()=>sSch()}
  catch(e){MT.busy=false;mtFoot();alertBox("送れませんでした："+e.message)}
@@ -553,7 +553,8 @@ function mtDraw(){
  if(r.st==="やめ")h+='<div class="box" style="color:#888;font-weight:700">この日程調整はやめました</div>';
  h+='<div class="ch">候補'+(can?'（出られる枠に○）':'')+'</div>';
  r.cands.forEach(c=>{const v=MO.sel[c.k]||"",fx=r.st==="決まり"&&r.fixed===c.lab;
-  h+='<div class="mc'+(v==="○"||fx?" on":"")+'"><div class="ml"><b>'+(fx?"✅ ":"")+esc(c.lab)+'</b>'
+  h+='<div class="mc'+(v==="○"||fx?" on":"")+'"><div class="ml"><b>'+(fx?"✅ ":"")+(c.warn&&c.warn.length?"△ ":"")+esc(c.lab)+'</b>'
+  +(c.warn&&c.warn.length?'<small style="color:#B26A00">△ '+esc(c.warn.join("／"))+'（終日の予定）</small>':'')
   +(r.as?(c.clash.length?'<small class="cl">⚠️ 重なる予定：'+esc(c.clash.join("／"))+'</small>':'<small>その日の予定：'+esc(c.day.length?c.day.join("／"):"なし")+'</small>'):'')
   +'<div class="who3">'+c.all.map(a=>'<span class="'+(a.v==="○"?"o":a.v==="×"?"x":"")+'">'+esc(a.who)+' '+(a.v||"まだ")+'</span>').join("")+'</div></div>'
   +(can?'<div class="ox"><button class="o'+(v==="○"?" on":"")+'" data-ok="'+c.k+'" data-v="○">○</button><button class="x'+(v==="×"?" on":"")+'" data-ok="'+c.k+'" data-v="×">×</button></div>':'')+'</div>'});
