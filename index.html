@@ -826,6 +826,38 @@ async function uSend(){
  }catch(e){U.busy=false;$("sd").disabled=false;$("sd").textContent="大川さんに出す";alertBox("送れませんでした："+e.message)}
 }
 
+/* ---------- k51：お金（本体の「お金」と同じ数・受け口 k99 の op=money。3人とも全部見られる・¥ は押すまで隠す） ---------- */
+let MN={term:"",basis:"fix",show:false,r:null};
+(function(){const s=document.createElement("style");s.textContent='.mnt{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}.mnt div{background:#fff;border-radius:12px;padding:10px 8px}.mnt b{display:block;font-size:15px;font-variant-numeric:tabular-nums}.mnt span{font-size:11.5px;color:#666}.mnr{display:flex;justify-content:space-between;gap:8px;font-size:13px;padding:6px 0;border-bottom:1px dashed #e5e5e5}.mnr:last-child{border-bottom:0}.mnr i{font-style:normal;font-variant-numeric:tabular-nums;white-space:nowrap}.mnr small{color:#888}.mnh{font-weight:700;font-size:13px;margin:14px 2px 6px}.mnb{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.mnb select{border:1px solid #ddd;border-radius:8px;padding:6px;font-size:13px;background:#fff}#mn summary{list-style:none;cursor:pointer}#mn summary::-webkit-details-marker{display:none}#mn details[open]>summary .mnr span:after{content:" ▲";color:#aaa;font-size:10px}#mn details:not([open])>summary .mnr span:after{content:" ▼";color:#aaa;font-size:10px}';document.head.appendChild(s)})();
+function mnY(n){return MN.show?"¥"+Math.round(+n||0).toLocaleString():"¥ ••••"}
+async function mnStart(){
+ $("hd").textContent="お金";$("ft").hidden=true;
+ if(!MN.r)$("mn").innerHTML='<div class="skl"><div class="skc"><i></i><i class="w6"></i><i class="w4"></i></div><div class="skc"><i></i><i class="w6"></i></div></div>';else mnDraw();
+ try{const r=await apiC({op:"money",term:MN.term,basis:MN.basis},r=>{if(r&&r.ok){MN.r=r;mnDraw()}});if(!r.ok)return err(r.err);MN.r=r;MN.term=r.term;mnDraw()}catch(e){err("開けませんでした："+e.message)}
+}
+function mnDraw(){
+ const r=MN.r;if(!r||!r.ok)return;
+ const row=(a,b,c)=>'<div class="mnr"><span>'+a+(c?' <small>'+c+'</small>':'')+'</span><i>'+b+'</i></div>';
+ let h='<div class="bk" id="mn_bk">← 案件一覧</div>';
+ h+='<div class="mnb"><select id="mn_term">'+(r.terms||[r.term]).map(t=>'<option'+(t===r.term?" selected":"")+'>'+esc(t)+'</option>').join("")+'</select><div class="seg2" style="flex:1"><button type="button" data-mnb="fix" class="'+(MN.basis==="fix"?"on":"")+'">確定</button><button type="button" data-mnb="all" class="'+(MN.basis==="all"?"on":"")+'">見込み</button></div><button type="button" class="chip" id="mn_eye" style="border:1px solid #ccc;border-radius:16px;padding:6px 10px;background:#fff;font-size:12.5px">'+(MN.show?"¥ 隠す":"¥ 金額を出す")+'</button></div>';
+ h+='<div class="mnt"><div><b>'+mnY(r.sales)+'</b><span>売上</span></div><div><b>'+mnY(r.unpa)+'</b><span>ウンパさんの取り分</span></div><div><b>'+mnY(r.exp)+'</b><span>経費</span></div></div>';
+ h+='<div class="hint" style="text-align:left;margin:0 2px">'+esc(r.term)+'・'+esc(r.basis)+'（'+(r.basis==="見込み"?"実施確定から":"実施が済んだ件")+'）・本体のお金と同じ数</div>';
+ const w=r.wait||{n:0,sum:0,list:[]},pm=r.payMonth||{n:0,sum:0,list:[]};
+ h+='<div class="mnh">今月やるお金のこと</div><div class="box">';
+ h+='<details><summary>'+row('先方の入金待ち',mnY(w.sum),w.n+'件')+'</summary>'+(w.list||[]).map(x=>row(esc(x.name),mnY(x.amt),x.due?esc(String(x.due).slice(5).replace("-","/"))+' 予定':'')).join("")+'</details>';
+ h+='<details><summary>'+row('ウンパさんへ払う（'+esc(String(pm.ym||"").slice(5).replace(/^0/,""))+'月）',mnY(pm.sum),pm.n+'件')+'</summary>'+(pm.list||[]).map(x=>row(esc(x.name),mnY(x.amt),esc(String(x.stage||"").replace(/^\d+\./,"")))).join("")+'</details></div>';
+ const p=r.pay||{};
+ h+='<div class="mnh">ウンパさんの取り分（'+esc(r.term)+'）</div><div class="box">'+row('支払い前（実施完了・請求済み）',mnY((p.before||[0])[0]),(p.before||[0,0])[1]+'件')+row('支払い待ち（入金済み）',mnY((p.wait||[0])[0]),(p.wait||[0,0])[1]+'件')+row('支払い済み',mnY((p.done||[0])[0]),(p.done||[0,0])[1]+'件')+'</div>';
+ const ms=r.months||[],cur=String(r.today||"").slice(0,7),ci=Math.max(0,ms.findIndex(m=>m.key===cur));
+ const mrow=m=>row(esc(m.label),mnY(m.sales)+' ／ '+mnY(m.unpa),'');
+ const near=ms.slice(Math.max(0,ci-1),ci+2);
+ h+='<div class="mnh">月ごと（売上 ／ 取り分）</div><div class="box">'+near.map(mrow).join("")+'<details><summary class="kx" style="padding-top:6px">全部の月 ›</summary>'+ms.map(mrow).join("")+'</details></div>';
+ $("mn").innerHTML=h;
+ $("mn_bk").onclick=()=>kStart();
+ $("mn_eye").onclick=()=>{MN.show=!MN.show;mnDraw()};
+ $("mn_term").onchange=e=>{MN.term=e.target.value;mnStart()};
+ document.querySelectorAll("[data-mnb]").forEach(b=>b.onclick=()=>{MN.basis=b.dataset.mnb;mnStart()});
+}
 /* ---------- k44b：案件一覧（v=list）に 探す窓と件の詳しい画面（読むだけ）。前の mList は残す ---------- */
 let K={cases:{},q2c:{},q:"",d:null};
 (function(){const s=document.createElement("style");s.textContent='.kv{display:grid;grid-template-columns:7.4em 1fr;gap:4px 10px;font-size:13px;line-height:1.55}.kv b{color:#666;font-weight:400}.kv .un{color:#aaa}.kd{font-weight:700;font-size:12.5px;margin:10px 0 4px}.ki{font-size:13px;line-height:1.55;padding:6px 0;border-top:1px solid #f0f1f3}.ki:first-child{border-top:0}.ki a{color:#0a66c2;word-break:break-all}.ki details summary{font-weight:400;color:#0a66c2;font-size:12px}.ki .s{font-size:12px;margin-top:4px}.kn{font-size:13px;line-height:1.6}.row.ko{cursor:pointer}.row .op{float:right;color:#999;font-weight:400}.knote{font-size:12px;color:#666;margin:0 2px 8px}';document.head.appendChild(s)})();
@@ -851,7 +883,8 @@ function kList(){
  if(!mLf||(mLf!=="all"&&!cnt(mLf)))mLf=cnt("あなたの番")?"あなたの番":cnt("商談中")?"商談中":"all";
  // k23：アプリのステータスに合わせる（0件のものは出さない）
  const F=[["あなたの番","あなたの番"]].concat(KOS.map(k=>[k,k])).filter(([k])=>k==="あなたの番"||cnt(k)).concat([["all","全部"]]);
- $("mn").innerHTML='<input id="k_q" class="inp" type="search" placeholder="🔍 件・会社・人で探す" value="'+esc(K.q)+'"><div class="seg2" id="k_md"><button type="button" data-md="act" class="'+(K.mode!=="st"?"on":"")+'">動き順</button><button type="button" data-md="st" class="'+(K.mode==="st"?"on":"")+'">ステータス別</button></div><div class="filt kf" id="k_f"'+(K.mode==="st"?'':' hidden')+'>'+F.map(([k,v])=>'<button data-f="'+k+'" class="'+(mLf===k?"on":"")+'">'+v+' <i>'+cnt(k)+'</i></button>').join("")+'</div><div id="k_rows"></div>'+mClose();
+ $("mn").innerHTML='<button type="button" class="send2" id="k_money" style="margin:0 0 10px">💴 お金（売上・取り分・入金待ち）</button><input id="k_q" class="inp" type="search" placeholder="🔍 件・会社・人で探す" value="'+esc(K.q)+'"><div class="seg2" id="k_md"><button type="button" data-md="act" class="'+(K.mode!=="st"?"on":"")+'">動き順</button><button type="button" data-md="st" class="'+(K.mode==="st"?"on":"")+'">ステータス別</button></div><div class="filt kf" id="k_f"'+(K.mode==="st"?'':' hidden')+'>'+F.map(([k,v])=>'<button data-f="'+k+'" class="'+(mLf===k?"on":"")+'">'+v+' <i>'+cnt(k)+'</i></button>').join("")+'</div><div id="k_rows"></div>'+mClose();
+ if($("k_money"))$("k_money").onclick=()=>mnStart(); // k51：お金の画面
  document.querySelectorAll("#k_f button").forEach(b=>b.onclick=()=>{mLf=b.dataset.f;K.q="";kList()});
  document.querySelectorAll("#k_md button").forEach(b=>b.onclick=()=>{K.mode=b.dataset.md;try{localStorage.setItem("k_md",K.mode)}catch(e){}kList()});
  $("k_q").oninput=e=>{K.q=e.target.value;kRows()};
@@ -1011,6 +1044,7 @@ function fxDraw(){
   if(V==="mtnew"){await sSch();return mtNew({what:P.get("w")||"",who:(P.get("p")||"").split(","),from:P.get("f")||"",to:P.get("t")||""})} // k89
   if(V==="bug")return bugOpen(P.get("w")||""); // k63：不具合を報告
   if(V==="to")return rTop();
+  if(!qid&&V==="money")return mnStart(); // k51
   if(!qid&&V==="list")return kStart(); // k44b：案件一覧（探す窓・件の詳しい画面）
   if(!qid&&(V==="todo"||V==="list"))return mStart(V);
   if(!qid)return err("件の番号がありません（カードの［答える］から開いてください）");
