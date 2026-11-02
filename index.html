@@ -854,6 +854,12 @@ function mnDraw(){
  const p=r.pay||{};
  const pd=(lab,a,L)=>'<details><summary>'+row(lab,mnY((a||[0])[0]),(a||[0,0])[1]+'件')+'</summary><div style="padding:0 0 6px 10px;border-left:3px solid #e6f4ea">'+ul(L)+'</div></details>';
  h+='<div class="mnh">ウンパさんの取り分（'+esc(r.term)+'）</div><div class="box">'+pd('支払い前（実施完了・請求済み）',p.before,D.before)+pd('支払い待ち（入金済み）',p.wait,D.wait)+pd('支払い済み',p.done,D.done)+'</div>';
+ { // k54：経費を人ごと（ウンパ収支に入れた／入れていない）
+  const XA=D.expAll||[];if(XA.length){const by={};XA.forEach(e=>{const k=e.payer||"（立替者なし）";(by[k]=by[k]||[]).push(e)});
+  const sum=L=>L.reduce((x,y)=>x+(+y.a||0),0),er=e=>row(esc([e.kind,e.what].filter(Boolean).join("・")||"経費"),mnY(e.a),esc([String(e.d||"").slice(5).replace("-","/"),e.settle?"精算 "+e.settle:"精算まだ"].filter(Boolean).join("・")));
+  h+='<div class="mnh">経費（'+esc(r.term)+'・人ごと）<small style="font-weight:400;color:#888"> 押すと中身</small></div><div class="box">'+Object.keys(by).sort((a,b)=>sum(by[b])-sum(by[a])).map(k=>{const L=by[k],I=L.filter(e=>e.inc),N=L.filter(e=>!e.inc);
+   return '<details><summary>'+row(esc(k),mnY(sum(L)),L.length+'件')+'</summary><div style="padding:0 0 6px 10px;border-left:3px solid #e6f4ea"><div class="kx" style="margin:4px 0">ウンパ収支に入れた '+I.length+'件・'+mnY(sum(I))+'</div>'+I.map(er).join("")+'<div class="kx" style="margin:8px 0 4px">入れていない '+N.length+'件・'+mnY(sum(N))+'</div>'+(N.map(er).join("")||'<div class="kx">ありません</div>')+'</div></details>'}).join("")+'</div>'}
+ }
  const ms=r.months||[],cur=String(r.today||"").slice(0,7),ci=Math.max(0,ms.findIndex(m=>m.key===cur));
  const mrow=m=>{const L=m.list||[];const hd=row(esc(m.label)+(m.key===cur?' <small>今月</small>':''),mnY(m.sales)+' ／ '+mnY(m.unpa),L.length?L.length+'件':'');return L.length?'<details><summary>'+hd+'</summary><div style="padding:0 0 6px 10px;border-left:3px solid #e6f4ea">'+L.map(x=>row(esc(x.name),mnY(x.sales)+' ／ '+mnY(x.unpa),esc(x.st))).join('')+'</div></details>':hd}; // k52：月を押すと、どの件がいくらか
  const near=ms.slice(Math.max(0,ci-1),ci+2);
