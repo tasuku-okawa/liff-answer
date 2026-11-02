@@ -965,6 +965,7 @@ function fxDraw(){
  let t="";
  if(FX.test)t+='<div class="as"><span class="cnt" style="margin:4px 0">試しに：</span>'+["大川","江藤","ウンパ"].map(w=>'<button data-fx="'+w+'" class="'+(FX.as===w?"on":"")+'">'+FXN[w]+'</button>').join("")+'</div>';
  t+='<div class="stats"><button class="stt'+((FX.ua.qs||0)?" on":"")+'" data-go="fx_q"><b>'+(FX.ua.qs||0)+'</b><span>答える問い</span></button><button class="stt" data-go="fx_t"><b>'+(FX.today||0)+'</b><span>今日までのやること</span></button><button class="stt" data-go="fx_n"><b>'+((FX.news||[]).length)+'</b><span>知らせ</span></button></div>';
+ if(FX.quota&&FX.quota.limit){const u=+FX.quota.used||0,l=+FX.quota.limit,warn=u>=l*0.75;t+='<div class="hint" style="text-align:left;margin:2px 2px 8px'+(warn?';color:#D93025;font-weight:700':'')+'">📨 今月の LINE '+u+'／'+l+'通（残り '+Math.max(0,l-u)+'）</div>'} // k50：今月の通数（大川さんだけ・受け口 k94）
  top.innerHTML=t;
  if(other){ // 大川さんがほかの人として見るとき：答えるは数と件名だけ（答えるのは本人）
   mn.innerHTML="";$("ft").hidden=true;
