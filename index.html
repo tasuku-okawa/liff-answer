@@ -485,7 +485,9 @@ function mtBox(r){
  return h+'</div>';
 }
 function mtDay(k){const d=new Date(Date.now()+k*864e5);return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0")}
-function mtNew(){const me=(SC&&SC.who)||"大川";MT={me,what:"",who:MTW.map(w=>w[0]).filter(w=>w!==me),len:60,when:"2w",from:mtDay(1),to:mtDay(14),bands:["am","pm"],wk:false,slots:null,pick:[],calNg:[],rid:Math.random().toString(36).slice(2),busy:false};mtForm()}
+function mtNew(pre){const me=(SC&&SC.who)||"大川";MT={me,what:"",who:MTW.map(w=>w[0]).filter(w=>w!==me),len:60,when:"2w",from:mtDay(1),to:mtDay(14),bands:["am","pm"],wk:false,slots:null,pick:[],calNg:[],rid:Math.random().toString(36).slice(2),busy:false};
+ if(pre){const ok=d=>/^\d{4}-\d{2}-\d{2}$/.test(d||"");if(pre.what)MT.what=pre.what.slice(0,40);const w=(pre.who||[]).filter(x=>x!==me&&MTW.some(y=>y[0]===x));if(w.length)MT.who=w;if(ok(pre.from)&&ok(pre.to)&&pre.from<=pre.to){MT.when="pick";MT.from=pre.from<mtDay(1)?mtDay(1):pre.from;MT.to=pre.to<MT.from?MT.from:pre.to}if(/定例|打合せ/.test(MT.what))MT.bands=["am","pm","eve"]} // k89：AI の答え・グループの日程の話の［日程調整を作る］から
+ mtForm()}
 function mtRange(){const w=new Date().getDay();if(MT.when==="1w")return [mtDay(1),mtDay((7-w)%7+7)];if(MT.when==="2w")return [mtDay(1),mtDay(14)];if(MT.when==="4w")return [mtDay(1),mtDay(30)];return [MT.from,MT.to]}
 function mtKeep(){if($("mt_w"))MT.what=$("mt_w").value;if($("mt_f"))MT.from=$("mt_f").value;if($("mt_t"))MT.to=$("mt_t").value;if($("mt_wk"))MT.wk=$("mt_wk").checked}
 function mtForm(){
@@ -1005,6 +1007,7 @@ function fxDraw(){
   if(V==="sub")return uSub(); // 提出する（3つを足した入口。前の sSub は残す）
   if(V==="sch")return sSch();
   if(V==="mt")return mtOpen(P.get("id")||""); // k59：3人の日程調整に○×
+  if(V==="mtnew"){await sSch();return mtNew({what:P.get("w")||"",who:(P.get("p")||"").split(","),from:P.get("f")||"",to:P.get("t")||""})} // k89
   if(V==="bug")return bugOpen(P.get("w")||""); // k63：不具合を報告
   if(V==="to")return rTop();
   if(!qid&&V==="list")return kStart(); // k44b：案件一覧（探す窓・件の詳しい画面）
