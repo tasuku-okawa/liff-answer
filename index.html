@@ -849,9 +849,9 @@ function mnDraw(){
  const p=r.pay||{};
  h+='<div class="mnh">ウンパさんの取り分（'+esc(r.term)+'）</div><div class="box">'+row('支払い前（実施完了・請求済み）',mnY((p.before||[0])[0]),(p.before||[0,0])[1]+'件')+row('支払い待ち（入金済み）',mnY((p.wait||[0])[0]),(p.wait||[0,0])[1]+'件')+row('支払い済み',mnY((p.done||[0])[0]),(p.done||[0,0])[1]+'件')+'</div>';
  const ms=r.months||[],cur=String(r.today||"").slice(0,7),ci=Math.max(0,ms.findIndex(m=>m.key===cur));
- const mrow=m=>row(esc(m.label),mnY(m.sales)+' ／ '+mnY(m.unpa),'');
+ const mrow=m=>{const L=m.list||[];const hd=row(esc(m.label)+(m.key===cur?' <small>今月</small>':''),mnY(m.sales)+' ／ '+mnY(m.unpa),L.length?L.length+'件':'');return L.length?'<details><summary>'+hd+'</summary><div style="padding:0 0 6px 10px;border-left:3px solid #e6f4ea">'+L.map(x=>row(esc(x.name),mnY(x.sales)+' ／ '+mnY(x.unpa),esc(x.st))).join('')+'</div></details>':hd}; // k52：月を押すと、どの件がいくらか
  const near=ms.slice(Math.max(0,ci-1),ci+2);
- h+='<div class="mnh">月ごと（売上 ／ 取り分）</div><div class="box">'+near.map(mrow).join("")+'<details><summary class="kx" style="padding-top:6px">全部の月 ›</summary>'+ms.map(mrow).join("")+'</details></div>';
+ h+='<div class="mnh">月ごと（売上 ／ ウンパさんの取り分）<small style="font-weight:400;color:#888"> 月を押すと中身</small></div><div class="box">'+near.map(mrow).join("")+'<details><summary class="kx" style="padding-top:6px">全部の月 ›</summary>'+ms.map(mrow).join("")+'</details></div>';
  $("mn").innerHTML=h;
  $("mn_bk").onclick=()=>kStart();
  $("mn_eye").onclick=()=>{MN.show=!MN.show;mnDraw()};
